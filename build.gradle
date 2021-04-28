@@ -1,5 +1,13 @@
 import io.quarkus.gradle.tasks.QuarkusBuild
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
+buildscript {
+    ext.kotlin_version = '1.4.20'
+    ext.jaxrs_functional_test_builder_version = "1.0.4"
+    ext.test_containers_version = '1.15.1'
+    ext.test_containers_keycloak_version = '1.5.0'
+}
+
 plugins {
     id 'org.jetbrains.kotlin.jvm' version "1.4.31"
     id "org.jetbrains.kotlin.plugin.allopen" version "1.4.31"
@@ -21,7 +29,15 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-resteasy'
+    implementation 'io.quarkus:quarkus-oidc'
+
+    testImplementation "io.rest-assured:kotlin-extensions"
+    testImplementation "com.squareup.moshi:moshi-kotlin:1.9.2"
+    testImplementation "com.squareup.moshi:moshi-adapters:1.9.2"
+    testImplementation 'com.squareup.okhttp3:okhttp'
     testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation "com.github.dasniko:testcontainers-keycloak:$test_containers_keycloak_version"
+    testImplementation "fi.metatavu.jaxrs.testbuilder:jaxrs-functional-test-builder:$jaxrs_functional_test_builder_version"
 }
 
 group 'fi.metatavu.ikioma'

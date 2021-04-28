@@ -3,22 +3,27 @@ package fi.metatavu.ikioma.rest
 import fi.metatavu.ikioma.email.EmailController
 import fi.metatavu.ikioma.email.api.api.spec.V1Api
 import fi.metatavu.ikioma.email.api.spec.model.Email
+import javax.enterprise.context.RequestScoped
 import javax.inject.Inject
 import javax.ws.rs.core.Response
+
 
 /**
  * V1 API
  */
-class V1ApiImpl: V1Api, AbstractApi() {
+@RequestScoped
+class V1ApiImpl: V1Api, AbstractApi()  {
 
     @Inject
     private lateinit var emailController: EmailController
 
-    override fun createEmail(email: Email?): Response {
-        TODO("Not yet implemented")
+    override fun createEmail(email: Email): Response {
+        loggerUserId() ?: return Response.status(401).build()
+        emailController.sendEmail(email.receiverAddress, email.subject, email.messageBody)
+        return Response.accepted().build();
     }
 
     override fun ping(): Response {
-        return createOk("pong")
+        return Response.ok("pong").build()
     }
 }

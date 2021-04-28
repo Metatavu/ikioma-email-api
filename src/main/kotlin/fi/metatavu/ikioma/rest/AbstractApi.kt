@@ -1,21 +1,36 @@
 package fi.metatavu.ikioma.rest
 
+import org.eclipse.microprofile.jwt.JsonWebToken
+import org.slf4j.Logger
+import java.util.*
 import javax.enterprise.context.RequestScoped
-import javax.ws.rs.core.Response
+import javax.inject.Inject
 
 @RequestScoped
 abstract class AbstractApi {
 
+    @Inject
+    private lateinit var logger: Logger
+
+    @Inject
+    private lateinit var jsonWebToken: JsonWebToken
+
     /**
-     * Constructs ok response
+     * Returns logged user id
      *
-     * @param entity payload
-     * @return response
+     * @return logged user id
      */
-    protected fun createOk(entity: Any?): Response {
-        return Response
-            .status(Response.Status.OK)
-            .entity(entity)
-            .build()
+    protected open fun loggerUserId(): UUID? {
+        if (jsonWebToken.subject != null) {
+
+            return try {
+                UUID.fromString(jsonWebToken.subject)
+            } catch (ex: IllegalArgumentException) {
+                logger.error(ex.message)
+                null
+            }
+        }
+
+        return null
     }
 }
