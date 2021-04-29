@@ -6,7 +6,6 @@ import fi.metatavu.ikioma.integrations.test.functional.resources.KeycloakTestRes
 import io.quarkus.mailer.MockMailbox
 import io.quarkus.test.common.QuarkusTestResource
 import io.quarkus.test.junit.QuarkusTest
-import io.restassured.RestAssured.given
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,16 +26,23 @@ class EmailTestIT {
     }
 
     /**
-     * Tests sending emails using blocking email service
+     * Tests sending emails using async email service
      */
     @Test
     fun sendSimpleEmailTest() {
         TestBuilder().use { testBuilder ->
             val email = Email(
                 receiverAddress = "tero.ayramo@example.com",
-                subject = "Prescription renewal request",
+                subject = "Prescription renewal request Tero",
                 messageBody = "Request new prescription for Burana"
             )
+
+            val email1 = Email(
+                receiverAddress = "onni.korhonen@example.com",
+                subject = "Prescription renewal request Onni",
+                messageBody = "Request new prescription for Burana"
+            )
+
             var i = 0
             while (i < 100) {
                 testBuilder.onniKorhonen().emails.sendEmail(email)
@@ -47,33 +53,35 @@ class EmailTestIT {
             Assertions.assertEquals(100, teroMessages.size)
             Assertions.assertEquals(email.messageBody, teroMessages[0].text)
             Assertions.assertEquals(email.subject, teroMessages[0].subject)
+
+            var k = 0
+            while (k < 500) {
+                testBuilder.onniKorhonen().emails.sendEmail(email1)
+                k++
+            }
+            Assertions.assertEquals(600, mailbox.totalMessagesSent)
+            val onniMessages = mailbox.getMessagesSentTo(email1.receiverAddress)
+            Assertions.assertEquals(500, onniMessages.size)
+            Assertions.assertEquals(email1.messageBody, onniMessages[0].text)
+            Assertions.assertEquals(email1.subject, onniMessages[0].subject)
         }
     }
 
+    /**
+     * Tests sending emails with invalid fields
+     */
     @Test
-    fun sendAsyncEmailTest() {
-        val sub = "subject"
-        val body = "body"
-        val to = "receiver"
-        val params1 = mapOf(
-            Pair(sub, "prescription renewal 1"),
-            Pair(body, "burana 1"),
-            Pair(to, "tero.ayramo@example.com")
-        )
-        var i = 0
-        while (i < 100) {
-            given()
-                .contentType("application/json")
-                .queryParams(params1)
-                .`when`()
-                .post("/async")
-                .then()
-                .statusCode(202)
-            i++
-        }
+    fun sendInvalidEmailTestFail() {
+        TestBuilder().use { testBuilder ->
+            val invalidAddress = Email(
+                receiverAddress = " asd sad t@#e    ro  .ayr aa",
+                subject = "Prescription renewal request",
+                messageBody = "Request new prescription for Burana"
+            )
+            testBuilder.onniKorhonen().emails.assertSendFail(400, invalidAddress)
 
-        Assertions.assertEquals(100, mailbox.totalMessagesSent)
-        val teroMessages = mailbox.getMessagesSentTo("tero.ayramo@example.com")
-        Assertions.assertEquals(100, teroMessages.size)
+            val emptyFields = Email(receiverAddress = "onni.korhonen@example.com", subject = "", messageBody = "")
+            testBuilder.onniKorhonen().emails.assertSendFail(400, emptyFields)
+        }
     }
 }
