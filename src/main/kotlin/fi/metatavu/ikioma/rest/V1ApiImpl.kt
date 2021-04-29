@@ -33,7 +33,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         }
 
         return try {
-            emailController.sendEmailAsync(email.receiverAddress, email.subject, email.messageBody)?.subscribeAsCompletionStage()?.toCompletableFuture()?.get(5L, TimeUnit.SECONDS)
+            emailController.sendEmailAsync(email.receiverAddress, email.subject, email.messageBody)!!.subscribeAsCompletionStage()!!.toCompletableFuture()!!.get(5L, TimeUnit.SECONDS)
             createOk()
         } catch (e: Exception) {
             when (e) {
