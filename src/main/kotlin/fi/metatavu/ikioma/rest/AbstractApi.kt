@@ -75,13 +75,11 @@ abstract class AbstractApi {
     /**
      * Constructs no content response
      *
-     * @param entity payload
      * @return response
      */
-    protected fun createAccepted(entity: Any?): Response {
+    protected fun createAccepted(): Response {
         return Response
             .status(Response.Status.ACCEPTED)
-            .entity(entity)
             .build()
     }
 

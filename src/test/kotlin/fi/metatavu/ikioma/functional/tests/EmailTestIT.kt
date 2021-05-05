@@ -68,10 +68,10 @@ class EmailTestIT {
     }
 
     /**
-     * Tests sending emails with invalid fields
+     * Tests sending emails with invalid address
      */
     @Test
-    fun sendInvalidEmailTestFail() {
+    fun sendInvalidAddressEmailTestFail() {
         TestBuilder().use { testBuilder ->
             val invalidAddress = Email(
                 receiverAddress = " asd sad t@#e    ro  .ayr aa",
@@ -82,6 +82,21 @@ class EmailTestIT {
 
             val emptyFields = Email(receiverAddress = "onni.korhonen@example.com", subject = "", messageBody = "")
             testBuilder.onniKorhonen().emails.assertSendFail(400, emptyFields)
+        }
+    }
+
+    /**
+     * Tests sending emails by not registered user
+     */
+    @Test
+    fun sendUnregisteredEmailTest() {
+        TestBuilder().use { testBuilder ->
+            val email = Email(
+                receiverAddress = "tero.ayramo@example.com",
+                subject = "Prescription renewal request Tero",
+                messageBody = "Request new prescription for Burana"
+            )
+            testBuilder.teroAyramoNonRegistered().emails.assertSendFail(403, email)
         }
     }
 }
