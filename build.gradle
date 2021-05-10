@@ -1,7 +1,22 @@
+import io.quarkus.gradle.tasks.QuarkusBuild
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
+buildscript {
+    ext.kotlin_version = '1.4.20'
+    ext.jaxrs_functional_test_builder_version = "1.0.4"
+    ext.test_containers_version = '1.15.1'
+    ext.test_containers_keycloak_version = '1.5.0'
+}
+
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "1.4.31"
-    id "org.jetbrains.kotlin.plugin.allopen" version "1.4.31"
+    id 'org.jetbrains.kotlin.jvm' version "1.4.20"
+    id "org.jetbrains.kotlin.plugin.allopen" version "1.4.20"
+    id "org.jetbrains.kotlin.kapt" version "1.4.30"
     id 'io.quarkus'
+    id "org.openapi.generator" version "5.0.0"
+    id 'java'
+    id "com.avast.gradle.docker-compose" version "0.14.0"
+    id 'com.github.kt3k.coveralls' version '2.12.0'
 }
 
 repositories {
@@ -18,7 +33,16 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-resteasy'
+    implementation 'io.quarkus:quarkus-oidc'
+    implementation 'commons-validator:commons-validator:1.7'
+
+    testImplementation "io.rest-assured:kotlin-extensions"
+    testImplementation "com.squareup.moshi:moshi-kotlin:1.9.2"
+    testImplementation "com.squareup.moshi:moshi-adapters:1.9.2"
+    testImplementation 'com.squareup.okhttp3:okhttp'
     testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation "com.github.dasniko:testcontainers-keycloak:$test_containers_keycloak_version"
+    testImplementation "fi.metatavu.jaxrs.testbuilder:jaxrs-functional-test-builder:$jaxrs_functional_test_builder_version"
 }
 
 group 'fi.metatavu.ikioma'
@@ -29,17 +53,57 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+sourceSets.main.java.srcDirs += ['build/generated/api-spec/src/gen/java']
+sourceSets.test.java.srcDirs += ['build/generated/api-client/src/main/kotlin']
+
 allOpen {
     annotation("javax.ws.rs.Path")
     annotation("javax.enterprise.context.ApplicationScoped")
+    annotation("javax.enterprise.context.RequestScoped")
     annotation("io.quarkus.test.junit.QuarkusTest")
 }
 
+task generateApiSpec(type: GenerateTask) {
+    generatorName = "jaxrs-spec"
+    inputSpec = "$rootDir/ikioma-email-api-spec/swagger.yaml".toString()
+    outputDir = "$buildDir/generated/api-spec".toString()
+    apiPackage = "fi.metatavu.ikioma.email.api.api.spec"
+    invokerPackage = "fi.metatavu.ikioma.email.api.spec.invoker"
+    modelPackage = "fi.metatavu.ikioma.email.api.spec.model"
+    configOptions = [
+            dateLibrary: "java8",
+            interfaceOnly: "true",
+            returnResponse: "true",
+            useSwaggerAnnotations: "false"
+    ]
+}
+
+task generateApiClient(type: GenerateTask) {
+    generatorName = "kotlin"
+    library = "jvm-okhttp3"
+    inputSpec = "$rootDir/ikioma-email-api-spec/swagger.yaml".toString()
+    outputDir = "$buildDir/generated/api-client".toString()
+
+    packageName = "fi.metatavu.ikioma.email.api.client"
+    configOptions = [
+            dateLibrary: "string",
+            collectionType: "array"
+    ]
+}
+
+clean {
+    doFirst {
+        delete "$rootDir/src/gen".toString()
+    }
+}
+
 compileKotlin {
+    dependsOn generateApiSpec
     kotlinOptions.jvmTarget = JavaVersion.VERSION_11
     kotlinOptions.javaParameters = true
 }
 
 compileTestKotlin {
+    dependsOn generateApiClient
     kotlinOptions.jvmTarget = JavaVersion.VERSION_11
 }
