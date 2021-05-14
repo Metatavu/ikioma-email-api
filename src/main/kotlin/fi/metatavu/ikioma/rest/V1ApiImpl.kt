@@ -40,7 +40,16 @@ class V1ApiImpl : V1Api, AbstractApi() {
         }
 
         return try {
-            emailController.sendEmailAsync(email.receiverAddress, email.subject, email.messageBody)!!.subscribeAsCompletionStage()!!.toCompletableFuture()!!.get(5L, TimeUnit.SECONDS)
+            emailController
+                .sendEmailAsync(
+                    to = email.receiverAddress,
+                    subject = email.subject,
+                    textData = email.messageBody
+                )
+                .subscribeAsCompletionStage()
+                .toCompletableFuture()
+                .get(1L, TimeUnit.MINUTES)
+
             createAccepted()
         } catch (e: Exception) {
             logger.error("Email sending failed", e)
