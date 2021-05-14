@@ -4,6 +4,7 @@ import fi.metatavu.ikioma.email.EmailController
 import fi.metatavu.ikioma.email.api.api.spec.V1Api
 import fi.metatavu.ikioma.email.api.spec.model.Email
 import org.apache.commons.validator.routines.EmailValidator
+import org.slf4j.Logger
 import java.util.concurrent.TimeUnit
 import javax.annotation.security.RolesAllowed
 import javax.enterprise.context.RequestScoped
@@ -19,6 +20,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
     @Inject
     private lateinit var emailController: EmailController
+
+    @Inject
+    private lateinit var logger: Logger
 
     @RolesAllowed(value = [ UserRole.PATIENT.name ])
     override fun createEmail(email: Email): Response {
@@ -39,6 +43,8 @@ class V1ApiImpl : V1Api, AbstractApi() {
             emailController.sendEmailAsync(email.receiverAddress, email.subject, email.messageBody)!!.subscribeAsCompletionStage()!!.toCompletableFuture()!!.get(5L, TimeUnit.SECONDS)
             createAccepted()
         } catch (e: Exception) {
+            logger.error("Email sending failed", e)
+
             when (e) {
                 is IllegalArgumentException -> createBadRequest("Invalid email")
                 else -> createInternalServerError("unknown error")
