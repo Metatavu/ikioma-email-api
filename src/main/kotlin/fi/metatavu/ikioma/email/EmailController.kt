@@ -38,7 +38,7 @@ class EmailController {
      * @param textData email text
      * @return sending status
      */
-    fun sendEmailAsync(to: String, subject: String, textData: String): Uni<Void>? {
+    fun sendEmailAsync(to: String, subject: String, textData: String): Uni<Void> {
         return reactiveMailer.send(Mail.withText(to, subject, textData))
     }
 }
