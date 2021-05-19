@@ -9,11 +9,11 @@ buildscript {
 }
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "1.4.20"
-    id "org.jetbrains.kotlin.plugin.allopen" version "1.4.20"
-    id "org.jetbrains.kotlin.kapt" version "1.4.30"
+    id 'org.jetbrains.kotlin.jvm' version "1.5.0"
+    id "org.jetbrains.kotlin.plugin.allopen" version "1.5.0"
+    id "org.jetbrains.kotlin.kapt" version "1.5.0"
     id 'io.quarkus'
-    id "org.openapi.generator" version "5.0.0"
+    id "org.openapi.generator" version "5.1.1"
     id 'java'
     id "com.avast.gradle.docker-compose" version "0.14.0"
     id 'com.github.kt3k.coveralls' version '2.12.0'
@@ -34,7 +34,19 @@ dependencies {
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-resteasy'
     implementation 'io.quarkus:quarkus-oidc'
+    implementation 'io.quarkus:quarkus-liquibase'
+    implementation 'io.quarkus:quarkus-hibernate-orm'
+    implementation 'io.quarkus:quarkus-jdbc-mysql'
     implementation 'commons-validator:commons-validator:1.7'
+    implementation 'io.quarkus:quarkus-rest-client'
+    implementation 'io.quarkus:quarkus-rest-client-jackson'
+    implementation 'org.apache.commons:commons-lang3:3.0'
+    implementation 'com.squareup.okhttp3:okhttp'
+    implementation "com.squareup.moshi:moshi-kotlin:1.9.2"
+    implementation "com.squareup.moshi:moshi-adapters:1.9.2"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    implementation "com.squareup.moshi:moshi-kotlin:1.11.0"
 
     testImplementation "io.rest-assured:kotlin-extensions"
     testImplementation "com.squareup.moshi:moshi-kotlin:1.9.2"
@@ -42,7 +54,11 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:okhttp'
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation "com.github.dasniko:testcontainers-keycloak:$test_containers_keycloak_version"
+    testImplementation 'org.testcontainers:mysql:1.15.1'
     testImplementation "fi.metatavu.jaxrs.testbuilder:jaxrs-functional-test-builder:$jaxrs_functional_test_builder_version"
+
+    kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.9.1'
+    kapt "org.hibernate:hibernate-jpamodelgen:5.4.27.SP1"
 }
 
 group 'fi.metatavu.ikioma'
@@ -70,6 +86,10 @@ task generateApiSpec(type: GenerateTask) {
     apiPackage = "fi.metatavu.ikioma.email.api.api.spec"
     invokerPackage = "fi.metatavu.ikioma.email.api.spec.invoker"
     modelPackage = "fi.metatavu.ikioma.email.api.spec.model"
+
+    importMappings = [
+            "URI": "java.net.URI"
+    ]
     configOptions = [
             dateLibrary: "java8",
             interfaceOnly: "true",
@@ -83,6 +103,9 @@ task generateApiClient(type: GenerateTask) {
     library = "jvm-okhttp3"
     inputSpec = "$rootDir/ikioma-email-api-spec/swagger.yaml".toString()
     outputDir = "$buildDir/generated/api-client".toString()
+    importMappings = [
+            URI: "java.net.URI"
+    ]
 
     packageName = "fi.metatavu.ikioma.email.api.client"
     configOptions = [

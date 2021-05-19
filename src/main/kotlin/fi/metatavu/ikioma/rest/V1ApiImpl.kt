@@ -1,14 +1,19 @@
 package fi.metatavu.ikioma.rest
 
-import fi.metatavu.ikioma.email.EmailController
+import fi.metatavu.ikioma.controllers.EmailController
+import fi.metatavu.ikioma.controllers.PaymentController
+import fi.metatavu.ikioma.controllers.PrescriptionRenewalController
 import fi.metatavu.ikioma.email.api.api.spec.V1Api
-import fi.metatavu.ikioma.email.api.spec.model.Email
-import org.apache.commons.validator.routines.EmailValidator
+import fi.metatavu.ikioma.email.api.spec.model.PaymentStatus
+import fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal
+import fi.metatavu.ikioma.rest.translate.PrescriptionRenewalTranslator
 import org.slf4j.Logger
-import java.util.concurrent.TimeUnit
+import java.net.URI
+import java.util.*
 import javax.annotation.security.RolesAllowed
 import javax.enterprise.context.RequestScoped
 import javax.inject.Inject
+import javax.transaction.Transactional
 import javax.ws.rs.core.Response
 
 
@@ -16,50 +21,78 @@ import javax.ws.rs.core.Response
  * V1 API
  */
 @RequestScoped
+@Transactional
 class V1ApiImpl : V1Api, AbstractApi() {
 
     @Inject
     private lateinit var emailController: EmailController
 
     @Inject
+    private lateinit var prescriptionController: PrescriptionRenewalController
+
+    @Inject
+    private lateinit var paymentController: PaymentController
+
+    @Inject
+    private lateinit var prescriptionRenewalTranslator: PrescriptionRenewalTranslator
+
+    @Inject
     private lateinit var logger: Logger
 
-    @RolesAllowed(value = [ UserRole.PATIENT.name ])
-    override fun createEmail(email: Email): Response {
+    override fun checkoutFinlandCancel(): Response {
+        TODO("Not yet implemented")
+    }
+
+    override fun checkoutFinlandSuccess(
+        checkoutAccount: Int,
+        checkoutAlgorithm: String,
+        checkoutAmount: Int,
+        checkoutStamp: String,
+        checkoutReference: String,
+        checkoutTransactionId: String,
+        checkoutStatus: String,
+        checkoutProvider: String,
+        signature: String
+    ): Response {
+        //todo is there token
+        //todo verify signature?
+        val prescriptionRenewal = prescriptionController.findPrescriptionRenewalByTransactionId(transactionId = checkoutTransactionId)
+        prescriptionRenewal ?: return createNoContent()
+
+        prescriptionController.updatePrescriptionRenewalStatus(prescriptionRenewal, PaymentStatus.PAID)
+        //send email
+        //emailController.sendPrescriptionRenewalSuccess(prescriptionRenewal)
+
+        prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
+        return createOk()
+    }
+
+    @RolesAllowed(value = [UserRole.PATIENT.name])
+    override fun createPrescriptionRenewal(prescriptionRenewal: PrescriptionRenewal): Response {
+        val userId = loggedUserId ?: return createUnauthorized("Unauthorized")
+
+        val paymentData = paymentController.initRenewPrescriptionPayment(prescriptionRenewal, userId)
+        paymentData ?: return createInternalServerError("Failed to create payment")
+
+        val newPrescriptionRenewal = prescriptionController.createPrescriptionRenewal(
+            prescriptions = prescriptionRenewal.prescriptions,
+            practitionerUserId = prescriptionRenewal.practitionerUserId,
+            paymentStatus = prescriptionRenewal.status,
+            paymentUrl = paymentData.paymentUrl,
+            transactionId = paymentData.transactionId,
+            userId = userId
+        )
+
+        return createOk(prescriptionRenewalTranslator.translate(newPrescriptionRenewal))
+    }
+
+    @RolesAllowed(value = [UserRole.PATIENT.name])
+    override fun getPrescriptionRenewal(id: UUID): Response {
         loggedUserId ?: return createUnauthorized("Unauthorized")
-        if (!EmailValidator.getInstance().isValid(email.receiverAddress)) {
-            return createBadRequest("Invalid email address")
-        }
+        val prescriptionRenewal = prescriptionController.findPrescriptionRenewal(id)
 
-        if (email.messageBody.isBlank()) {
-            return createBadRequest("Email message is blank")
-        }
-
-        if (email.subject.isBlank()){
-            return createBadRequest("Email subject is blank")
-        }
-
-        return try {
-            emailController
-                .sendEmailAsync(
-                    to = email.receiverAddress,
-                    subject = email.subject,
-                    textData = email.messageBody
-                )
-                .subscribeAsCompletionStage()
-                .toCompletableFuture()
-                .get(1L, TimeUnit.MINUTES)
-
-            createAccepted()
-        } catch (e: Exception) {
-            logger.error("Email sending failed", e)
-
-            when (e) {
-                is IllegalArgumentException -> createBadRequest("Invalid email")
-                else -> createInternalServerError("unknown error")
-            }
-
-        }
+        prescriptionRenewal ?: return createNotFound()
+        return createOk(prescriptionRenewalTranslator.translate(prescriptionRenewal))
     }
 
     override fun ping(): Response {

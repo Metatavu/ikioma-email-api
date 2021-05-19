@@ -1,5 +1,6 @@
-package fi.metatavu.ikioma.email
+package fi.metatavu.ikioma.controllers
 
+import fi.metatavu.ikioma.persistence.models.PrescriptionRenewal
 import io.quarkus.mailer.Mail
 import io.quarkus.mailer.Mailer
 import io.quarkus.mailer.reactive.ReactiveMailer
@@ -40,5 +41,9 @@ class EmailController {
      */
     fun sendEmailAsync(to: String, subject: String, textData: String): Uni<Void> {
         return reactiveMailer.send(Mail.withText(to, subject, textData))
+    }
+
+   fun sendPrescriptionRenewalSuccess(prescriptionRenewal: PrescriptionRenewal, email: String, ssn: String) {
+
     }
 }
