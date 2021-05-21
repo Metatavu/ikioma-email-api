@@ -47,22 +47,14 @@ class V1ApiImpl : V1Api, AbstractApi() {
         TODO("Not yet implemented")
     }
 
-    @RolesAllowed(value = [UserRole.PATIENT.name])
     override fun checkoutFinlandSuccess(
-        checkoutAccount: Int,
-        checkoutAlgorithm: String,
-        checkoutAmount: Int,
-        checkoutStamp: String,
-        checkoutReference: String,
-        checkoutTransactionId: String,
-        checkoutStatus: String,
-        checkoutProvider: String,
         signature: String
     ): Response {
-        val userId = loggedUserId ?: return createUnauthorized("Unauthorized")
-        val ssn = keycloakController.getUserSSN(userId) ?: return createNotFound("User with ID $userId could not be found!")
-        val firstName = keycloakController.getFirstName(userId) ?: return createNotFound("User with ID $userId could not be found!")
-        val lastName = keycloakController.getLastName(userId) ?: return createNotFound("User with ID $userId could not be found!")
+        val checkoutParameters = getCheckoutParameters()
+
+        val checkoutReference = checkoutParameters["checkout-reference"] ?: return createBadRequest("No checkout reference")
+        val checkoutStamp = checkoutParameters["checkout-stamp"] ?: return createBadRequest("No checkout stamp")
+        val checkoutTransactionId = checkoutParameters["checkout-transaction-id"] ?: return createBadRequest("No checkout transaction id")
 
         val refNo: UUID?
         try {
@@ -73,20 +65,17 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
         val prescriptionRenewal = prescriptionController.findPrescriptionRenewalByReference(reference = refNo)
         prescriptionRenewal ?: return createNotFound()
+        val userId = prescriptionRenewal.creatorId ?: return createNotFound()
+
+        val ssn = keycloakController.getUserSSN(userId) ?: return createNotFound("User with ID $userId could not be found!")
+        val firstName = keycloakController.getFirstName(userId) ?: return createNotFound("User with ID $userId could not be found!")
+        val lastName = keycloakController.getLastName(userId) ?: return createNotFound("User with ID $userId could not be found!")
 
         if (prescriptionRenewal.stamp != UUID.fromString(checkoutStamp) || prescriptionRenewal.transactionId != checkoutTransactionId) {
             return createForbidden("Payment information does not match")
         }
 
-        if (!paymentController.verifyPayment(signature, mapOf(
-                Pair("checkout-account" ,checkoutAccount),
-                Pair("checkout-algorithm", checkoutAlgorithm),
-                Pair("checkout-amount", checkoutAmount),
-                Pair("checkout-stamp", checkoutStamp),
-                Pair("checkout-reference", checkoutReference),
-                Pair("checkout-transaction-id", checkoutTransactionId),
-                Pair("checkout-status", checkoutStatus),
-                Pair("checkout-provider", checkoutProvider)))) {
+        if (!paymentController.verifyPayment(signature, checkoutParameters)) {
             return createForbidden("Bad signature")
         }
 

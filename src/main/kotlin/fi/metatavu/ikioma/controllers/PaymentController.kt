@@ -169,7 +169,7 @@ class PaymentController {
      * @param map parameters
      * @return true if signatures are same
      */
-    fun verifyPayment(signature: String, map: Map<String, Any>): Boolean {
+    fun verifyPayment(signature: String, map: Map<String, String>): Boolean {
         val calculatedSignature = buildHMAC(map, "")
         return calculatedSignature == signature
     }

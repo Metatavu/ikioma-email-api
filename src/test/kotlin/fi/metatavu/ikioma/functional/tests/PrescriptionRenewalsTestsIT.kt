@@ -5,17 +5,21 @@ import fi.metatavu.ikioma.email.api.client.models.PrescriptionRenewal
 import fi.metatavu.ikioma.functional.resources.MysqlResource
 import fi.metatavu.ikioma.functional.resources.TestBuilder
 import fi.metatavu.ikioma.integrations.test.functional.resources.KeycloakTestResource
+import fi.metatavu.ikioma.integrations.test.functional.settings.ApiTestSettings
 import io.quarkus.mailer.MockMailbox
 import io.quarkus.test.common.QuarkusTestResource
 import io.quarkus.test.junit.QuarkusTest
+import io.restassured.RestAssured
 import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils
 import org.eclipse.microprofile.config.ConfigProvider
+import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
 import javax.inject.Inject
+
 
 /**
  * Tests Payments API
@@ -102,42 +106,47 @@ class PrescriptionRenewalsTestsIT {
             val status = "ok"
             val amount = 1
 
-            builder.teroAyramo().checkoutFinlandTestBuilderResource.assertSuccessCallFail(
-                403,
-                checkoutAccount = foundRenewalRequest.checkoutAccount!!,
-                checkoutAlgorithm = algorithm,
-                checkoutProvider = provider,
-                checkoutStamp = UUID.randomUUID().toString(),
-                checkoutReference = foundRenewalRequest.id!!.toString(),
-                checkoutAmount = amount,
-                checkoutStatus = status,
-                checkoutTransactionId = foundRenewalRequest.transactionId!!,
-                signature = UUID.randomUUID().toString()
-            )
+            //different field
+            RestAssured.given()
+                .queryParam("signature", UUID.randomUUID().toString())
+                .queryParams(
+                    mapOf<String, Any>(
+                        Pair("checkout-account", foundRenewalRequest.checkoutAccount!!),
+                        Pair("checkout-amount", amount),
+                        Pair("checkout-provider", provider),
+                        Pair("checkout-algorithm", algorithm),
+                        Pair("checkout-reference", foundRenewalRequest.id!!.toString()),
+                        Pair("checkout-status", status),
+                        Pair("checkout-stamp", UUID.randomUUID().toString()),
+                        Pair("checkout-transaction-id", foundRenewalRequest.transactionId!!)
+                    )
+                )
+                .`when`()
+                .get("${builder.settings.apiBasePath}/v1/checkoutFinland/success")
+                .then().assertThat().statusCode(403).and().body("message", equalTo("Payment information does not match"))
 
-            builder.teroAyramo().checkoutFinlandTestBuilderResource.assertSuccessCallFail(
-                403,
-                checkoutAccount = foundRenewalRequest.checkoutAccount!!,
-                checkoutAlgorithm = algorithm,
-                checkoutProvider = provider,
-                checkoutStamp = foundRenewalRequest.stamp!!.toString(),
-                checkoutReference = foundRenewalRequest.id!!.toString(),
-                checkoutAmount = amount,
-                checkoutStatus = status,
-                checkoutTransactionId = foundRenewalRequest.transactionId!!,
-                signature = UUID.randomUUID().toString()
-            )
+            //wrong signature
+            RestAssured.given()
+                .queryParam("signature", UUID.randomUUID().toString())
+                .queryParams(
+                    mapOf<String, Any>(
+                        Pair("checkout-account", foundRenewalRequest.checkoutAccount),
+                        Pair("checkout-amount", amount),
+                        Pair("checkout-provider", provider),
+                        Pair("checkout-algorithm", algorithm),
+                        Pair("checkout-reference", foundRenewalRequest.id.toString()),
+                        Pair("checkout-status", status),
+                        Pair("checkout-stamp", foundRenewalRequest.stamp!!.toString()),
+                        Pair("checkout-transaction-id", foundRenewalRequest.transactionId)
+                    )
+                )
+                .`when`()
+                .get("${builder.settings.apiBasePath}/v1/checkoutFinland/success")
+                .then().assertThat().statusCode(403).and().body("message", equalTo("Bad signature"))
 
-            builder.teroAyramo().checkoutFinlandTestBuilderResource.success(
-                checkoutAccount = foundRenewalRequest.checkoutAccount,
-                checkoutAlgorithm = algorithm,
-                checkoutProvider = provider,
-                checkoutStamp = foundRenewalRequest.stamp.toString(),
-                checkoutReference = foundRenewalRequest.id.toString(),
-                checkoutAmount = amount,
-                checkoutStatus = status,
-                checkoutTransactionId = foundRenewalRequest.transactionId,
-                signature = calculateHmac(
+            //ok
+            RestAssured.given()
+                .queryParam("signature", calculateHmac(
                     checkoutAccount = foundRenewalRequest.checkoutAccount,
                     status = status,
                     amount = amount,
@@ -145,8 +154,21 @@ class PrescriptionRenewalsTestsIT {
                     stamp = foundRenewalRequest.stamp,
                     reference = foundRenewalRequest.id,
                     transactionId = foundRenewalRequest.transactionId
-                )
-            )
+                ))
+                .queryParams(mapOf<String, Any>(
+                    Pair("checkout-account", foundRenewalRequest.checkoutAccount),
+                    Pair("checkout-amount", amount),
+                    Pair("checkout-provider", provider),
+                    Pair("checkout-algorithm", algorithm),
+                    Pair("checkout-reference", foundRenewalRequest.id.toString()),
+                    Pair("checkout-status", status),
+                    Pair("checkout-stamp", foundRenewalRequest.stamp),
+                    Pair("checkout-transaction-id", foundRenewalRequest.transactionId)
+                ))
+                .`when`()
+                .get("${builder.settings.apiBasePath}/v1/checkoutFinland/success")
+                .then().assertThat().statusCode(200)
+
 
             builder.teroAyramo().prescriptionRenewals.assertFindFailStatus(404, createdPrescription.id)
             val practitionerMessages = mailbox.getMessagesSentTo(korhonenEmail)
