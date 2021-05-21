@@ -1,6 +1,7 @@
-package fi.metatavu.ikioma.integrations.test.functional.auth
+package fi.metatavu.ikioma.functional.auth
 
 import fi.metatavu.ikioma.email.api.client.infrastructure.ApiClient
+import fi.metatavu.ikioma.functional.impl.CheckoutFinlandTestBuilderResource
 import fi.metatavu.ikioma.functional.impl.PrescriptionRenewalTestBuilderResource
 import fi.metatavu.ikioma.functional.resources.TestBuilder
 import fi.metatavu.jaxrs.test.functional.builder.auth.AccessTokenProvider
@@ -25,6 +26,7 @@ class TestBuilderAuthentication(
     private var accessTokenProvider: AccessTokenProvider? = accessTokenProvider
 
     var prescriptionRenewals: PrescriptionRenewalTestBuilderResource = PrescriptionRenewalTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
+    var checkoutFinlandTestBuilderResource: CheckoutFinlandTestBuilderResource = CheckoutFinlandTestBuilderResource(testBuilder, this.accessTokenProvider, createClient())
 
     /**
      * Creates a API client

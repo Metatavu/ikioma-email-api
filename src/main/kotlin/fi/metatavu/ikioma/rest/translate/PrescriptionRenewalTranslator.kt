@@ -9,23 +9,24 @@ import javax.enterprise.context.ApplicationScoped
 class PrescriptionRenewalTranslator: AbstractTranslator<PrescriptionRenewal, fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal>() {
 
     /**
-     * Translates JPA exposure instances into REST exposure instances
+     * Translates JPA prescription renewal into REST prescription renewal
      *
-     * @param entity JPA exposure instance
+     * @param entity JPA prescription renewal
      *
-     * @return REST exposure instance
+     * @return REST prescription renewal
      */
     override fun translate(entity: PrescriptionRenewal): fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal {
         val prescriptionRenewal = fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal()
         prescriptionRenewal.id = entity.id
         if (entity.paymentUrl != null) {
-            prescriptionRenewal.paymentUrl = URI.create(entity.paymentUrl)
+            prescriptionRenewal.paymentUrl = entity.paymentUrl
         }
 
+        prescriptionRenewal.stamp = entity.stamp
+        prescriptionRenewal.checkoutAccount = entity.checkoutAccount
         prescriptionRenewal.practitionerUserId = entity.practitionerUserId
         prescriptionRenewal.prescriptions = entity.prescriptions?.toList()
         prescriptionRenewal.transactionId = entity.transactionId
-
         prescriptionRenewal.status = enumValueOf(entity.paymentStatus.toString())
         return prescriptionRenewal
     }

@@ -5,6 +5,7 @@ import io.quarkus.mailer.Mail
 import io.quarkus.mailer.Mailer
 import io.quarkus.mailer.reactive.ReactiveMailer
 import io.smallrye.mutiny.Uni
+import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
 
@@ -43,7 +44,7 @@ class EmailController {
         return reactiveMailer.send(Mail.withText(to, subject, textData))
     }
 
-   fun sendPrescriptionRenewalSuccess(prescriptionRenewal: PrescriptionRenewal, email: String, ssn: String) {
+   fun sendPrescriptionRenewalSuccess(prescriptionRenewal: PrescriptionRenewal, email: UUID, ssn: String) {
 
     }
 }

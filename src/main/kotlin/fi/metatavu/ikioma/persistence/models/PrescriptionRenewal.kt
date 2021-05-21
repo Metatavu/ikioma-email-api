@@ -26,6 +26,12 @@ class PrescriptionRenewal {
     @Column
     var practitionerUserId: UUID? = null
 
+    @Column
+    var stamp: UUID? = null
+
+    @Column
+    var checkoutAccount: Int? = null
+
     @Column(nullable = false)
     var paymentStatus: PaymentStatus? = null
 

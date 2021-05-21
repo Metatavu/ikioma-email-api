@@ -17,12 +17,13 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
     /**
      * Creates new prescription renewal object
      *
-     * @param id UUID
-     * @param transactionId String?
-     * @param prescriptions List<String>
-     * @param practitionerUserId UUID?
+     * @param id reference id
+     * @param transactionId transaction id
+     * @param prescriptions prescriptions list
+     * @param practitionerUserId practitioner user id
      * @param paymentStatus PaymentStatus?
      * @param paymentUrl String?
+     * @param stamp String?
      * @param creatorId UUID
      * @param lastModifierId UUID
      * @return PrescriptionRenewal
@@ -31,19 +32,23 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
         id: UUID,
         transactionId: String?,
         prescriptions: List<String>,
-        practitionerUserId: UUID?,
-        paymentStatus: PaymentStatus?,
-        paymentUrl: String?,
+        practitionerUserId: UUID,
+        paymentStatus: PaymentStatus,
+        paymentUrl: String,
+        stamp: UUID,
+        checkoutAccount: Int,
         creatorId: UUID,
         lastModifierId: UUID
     ): PrescriptionRenewal {
         val prescriptionRenewal = PrescriptionRenewal()
         prescriptionRenewal.id = id
-        prescriptionRenewal.prescriptions = prescriptions
         prescriptionRenewal.transactionId = transactionId
+        prescriptionRenewal.prescriptions = prescriptions
+        prescriptionRenewal.practitionerUserId = practitionerUserId
         prescriptionRenewal.paymentStatus = paymentStatus
         prescriptionRenewal.paymentUrl = paymentUrl
-        prescriptionRenewal.practitionerUserId = practitionerUserId
+        prescriptionRenewal.stamp = stamp
+        prescriptionRenewal.checkoutAccount = checkoutAccount
         prescriptionRenewal.creatorId = creatorId
         prescriptionRenewal.lastModifierId = lastModifierId
 
@@ -68,10 +73,10 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
     /**
      * Finds for prescription renewal request by its transaction id
      *
-     * @param transactionId payment transaction id
+     * @param reference payment transaction id
      * @return prescription renewal
      */
-    fun findByTransactionId(transactionId: String): PrescriptionRenewal? {
+    fun findByTransactionId(reference: UUID): PrescriptionRenewal? {
         val entityManager = getEntityManager()
 
         val criteriaBuilder = entityManager.criteriaBuilder
@@ -81,7 +86,7 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
         val root: Root<PrescriptionRenewal> = criteria.from(PrescriptionRenewal::class.java)
         criteria.select(root)
         criteria.where(
-            criteriaBuilder.equal(root.get(PrescriptionRenewal_.transactionId), transactionId)
+            criteriaBuilder.equal(root.get(PrescriptionRenewal_.id), reference)
         )
 
         return getSingleResult(entityManager.createQuery(criteria))

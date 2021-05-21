@@ -1,6 +1,5 @@
 package fi.metatavu.ikioma.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal
 import fi.metatavu.ikioma.email.payment.api.spec.PaymentsApi
 import fi.metatavu.ikioma.email.payment.spec.model.Callbacks
@@ -12,8 +11,6 @@ import org.apache.commons.codec.digest.HmacUtils
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.openapitools.client.infrastructure.Serializer
 import org.slf4j.Logger
-import java.io.StringWriter
-import java.net.URI
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -61,16 +58,16 @@ class PaymentController {
     ): PrescriptionRenewal? {
         val nonce = UUID.randomUUID().toString()
         val timestamp = OffsetDateTime.now()
-        val reference = UUID.randomUUID().toString()
-        val stamp = UUID.randomUUID().toString()
+        val reference = UUID.randomUUID()
+        val stamp = UUID.randomUUID()
 
         val customer = buildCustomerObject(loggedInUser)
         customer ?: return null
 
         val paymentsApi = PaymentsApi()
         val paymentRequest = PaymentRequest(
-            stamp = stamp,
-            reference = reference,
+            stamp = stamp.toString(),
+            reference = reference.toString(),
             amount = 2,
             customer = customer,
             currency = PaymentRequest.Currency.eUR,
@@ -86,12 +83,12 @@ class PaymentController {
                 )
             ),
             callbackUrls = Callbacks(
-                success = "$redirectBaseUrl/v1/checkoutFinland/success",
-                cancel = "$redirectBaseUrl/v1/checkoutFinland/cancel"
+                success = "$redirectBaseUrl/success",
+                cancel = "$redirectBaseUrl/cancel"
             ),
             redirectUrls = Callbacks(
-                success = "$redirectBaseUrl/v1/checkoutFinland/success",
-                cancel = "$redirectBaseUrl/v1/checkoutFinland/cancel"
+                success = "$redirectBaseUrl/success",
+                cancel = "$redirectBaseUrl/cancel"
             )
         )
         logger.info("Payment with stamp $stamp is created")
@@ -111,11 +108,16 @@ class PaymentController {
             headers["checkout-method"] as String?,
             headers["checkout-timestamp"] as OffsetDateTime?,
             headers["checkout-nonce"] as String?,
-            buildHMAC(headers, paymentRequest)
+            buildHMAC(headers, Serializer.moshi.adapter(PaymentRequest::class.java).toJson(paymentRequest))
         )
 
+        println(sendPayment)
+
+        prescriptionRenewal.id = reference
+        prescriptionRenewal.stamp = stamp
+        prescriptionRenewal.checkoutAccount = merchantId
         prescriptionRenewal.transactionId = sendPayment.transactionId.toString()
-        prescriptionRenewal.paymentUrl = URI.create(sendPayment.href)
+        prescriptionRenewal.paymentUrl = sendPayment.href
         return prescriptionRenewal
     }
 
@@ -136,25 +138,42 @@ class PaymentController {
     }
 
     /**
-     * Builds the HMAC from headers and payment request body
+     * Builds the HMAC from headers or parameters and request body
      *
-     * @param headers map of headers
+     * @param map map of headers or string parameters
      * @param body payment request
      * @return HMAC string
      */
-    private fun buildHMAC(headers: Map<String, Any>, body: PaymentRequest): String? {
-        val sw = StringWriter()
-        headers.toSortedMap().forEach { (a, b) ->
+    private fun buildHMAC(map: Map<String, Any>, body: String): String? {
+        val stringBuilder = StringBuilder()
+        map.toSortedMap().forEach { (a, b) ->
             run {
-                sw.append("$a:$b\n")
+                stringBuilder.append("$a:$b\n")
             }
         }
-        sw.append(Serializer.moshi.adapter(PaymentRequest::class.java).toJson(body))
-        return if (algorithm == "sha256") {
-            HmacUtils(HmacAlgorithms.HMAC_SHA_256, merchantSecret).hmacHex(sw.toString())
-        } else {
-            HmacUtils(HmacAlgorithms.HMAC_SHA_512, merchantSecret).hmacHex(sw.toString())
+        stringBuilder.append(body)
+
+        return when (algorithm) {
+            "sha256" -> {
+                HmacUtils(HmacAlgorithms.HMAC_SHA_256, merchantSecret).hmacHex(stringBuilder.toString())
+            }
+            "sha512" -> {
+                HmacUtils(HmacAlgorithms.HMAC_SHA_512, merchantSecret).hmacHex(stringBuilder.toString())
+            }
+            else -> null
         }
+    }
+
+    /**
+     * Verifies payment based on the received parameters
+     *
+     * @param signature provided signature
+     * @param map parameters
+     * @return true if signatures are same
+     */
+    fun verifyPayment(signature: String, map: Map<String, Any>): Boolean {
+        val calculatedSignature = buildHMAC(map, "")
+        return calculatedSignature == signature
     }
 
 

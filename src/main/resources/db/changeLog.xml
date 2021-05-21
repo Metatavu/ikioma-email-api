@@ -38,4 +38,17 @@
             </column>
         </createTable>
     </changeSet>
+
+    <changeSet id="referenceno" author="Katja Danilova">
+        <addColumn tableName="prescriptionrenewal">
+            <column name="stamp" type="binary(16)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="prescriptionrenewal">
+            <column name="checkoutaccount" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
