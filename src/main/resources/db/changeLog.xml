@@ -51,4 +51,9 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="columnnameformats" author="Katja Danilova">
+        <renameColumn tableName="prescriptions" oldColumnName="Prescription" columnDataType="varchar(100)" newColumnName="prescriptionname"/>
+        <modifyDataType tableName="prescriptions" columnName="prescriptionname" newDataType="varchar(500)"/>
+    </changeSet>
 </databaseChangeLog>

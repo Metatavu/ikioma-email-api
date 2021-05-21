@@ -32,7 +32,7 @@ class PrescriptionRenewal {
 
     @ElementCollection
     @CollectionTable(name = "Prescriptions", joinColumns = [JoinColumn(name = "ID")])
-    @Column(name = "Prescription", nullable = false)
+    @Column(name = "prescriptionname", nullable = false)
     lateinit var prescriptions: Collection<String>
 
     @Column
