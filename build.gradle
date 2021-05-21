@@ -38,8 +38,6 @@ dependencies {
     implementation 'io.quarkus:quarkus-hibernate-orm'
     implementation 'io.quarkus:quarkus-jdbc-mysql'
     implementation 'commons-validator:commons-validator:1.7'
-    implementation 'io.quarkus:quarkus-rest-client'
-    implementation 'io.quarkus:quarkus-rest-client-jackson'
     implementation 'org.apache.commons:commons-lang3:3.0'
     implementation 'com.squareup.okhttp3:okhttp'
     implementation "com.squareup.moshi:moshi-kotlin:1.9.2"

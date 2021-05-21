@@ -1,11 +1,10 @@
-package fi.metatavu.ikioma.controllers
+package fi.metatavu.ikioma.email
 
 import fi.metatavu.ikioma.persistence.models.PrescriptionRenewal
 import io.quarkus.mailer.Mail
 import io.quarkus.mailer.Mailer
 import io.quarkus.mailer.reactive.ReactiveMailer
 import io.smallrye.mutiny.Uni
-import java.util.logging.Logger
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
 
@@ -67,7 +66,7 @@ class EmailController {
         sendEmail(
             email,
             "Prescription renewal request for $firstName $lastName",
-            "Patient $ssn is requesting prescription renewal for ${prescriptionRenewal.prescriptions!!.joinToString(", ")}"
+            "Patient $ssn is requesting prescription renewal for ${prescriptionRenewal.prescriptions.joinToString(", ")}"
         )
     }
 }

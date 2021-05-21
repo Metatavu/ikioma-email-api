@@ -32,35 +32,35 @@ class PrescriptionRenewal {
 
     @ElementCollection
     @CollectionTable(name = "Prescriptions", joinColumns = [JoinColumn(name = "ID")])
-    @Column(name = "Prescription")
-    var prescriptions: Collection<String>? = null
+    @Column(name = "Prescription", nullable = false)
+    lateinit var prescriptions: Collection<String>
 
     @Column
     var transactionId: String? = null
 
     @Column(nullable = false)
-    var practitionerUserId: UUID? = null
+    lateinit var practitionerUserId: UUID
 
     @Column(nullable = false)
-    var stamp: UUID? = null
+    lateinit var stamp: UUID
 
     @Column(nullable = false)
     var checkoutAccount: Int? = null
 
     @Column(nullable = false)
-    var paymentStatus: PaymentStatus? = null
+    lateinit var paymentStatus: PaymentStatus
 
     @Column(nullable = false)
-    var createdAt: OffsetDateTime? = null
+    lateinit var createdAt: OffsetDateTime
 
     @Column(nullable = false)
-    var modifiedAt: OffsetDateTime? = null
+    lateinit var modifiedAt: OffsetDateTime
 
     @Column(nullable = false)
-    var creatorId: UUID? = null
+    lateinit var creatorId: UUID
 
     @Column(nullable = false)
-    var lastModifierId: UUID? = null
+    lateinit var lastModifierId: UUID
 
     /**
      * JPA pre-persist event handler

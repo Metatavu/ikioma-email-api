@@ -1,4 +1,4 @@
-package fi.metatavu.ikioma.controllers
+package fi.metatavu.ikioma.prescriptions
 
 import fi.metatavu.ikioma.email.api.spec.model.PaymentStatus
 import fi.metatavu.ikioma.persistence.dao.PrescriptionRenewalDAO

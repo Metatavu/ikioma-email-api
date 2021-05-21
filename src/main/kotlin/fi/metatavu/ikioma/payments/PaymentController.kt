@@ -1,5 +1,6 @@
-package fi.metatavu.ikioma.controllers
+package fi.metatavu.ikioma.payments
 
+import fi.metatavu.ikioma.keycloak.KeycloakController
 import fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal
 import fi.metatavu.ikioma.email.payment.api.spec.PaymentsApi
 import fi.metatavu.ikioma.email.payment.spec.model.Callbacks
@@ -11,6 +12,7 @@ import org.apache.commons.codec.digest.HmacUtils
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.openapitools.client.infrastructure.Serializer
 import org.slf4j.Logger
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -34,6 +36,22 @@ class PaymentController {
     @Inject
     @ConfigProperty(name = "checkout.redirectBaseUrl")
     private lateinit var redirectBaseUrl: String
+
+    @Inject
+    @ConfigProperty(name = "checkout.item.code")
+    private lateinit var itemCode: String
+
+    @Inject
+    @ConfigProperty(name = "checkout.item.category")
+    private lateinit var itemCategory: String
+
+    @Inject
+    @ConfigProperty(name = "checkout.item.vatPercentage")
+    private var itemVAT: Long = 0
+
+    @Inject
+    @ConfigProperty(name = "checkout.item.unitPrice")
+    private var price: Long = 0
 
     @Inject
     @ConfigProperty(name = "checkout.merchant.secret")
@@ -68,16 +86,16 @@ class PaymentController {
         val paymentRequest = PaymentRequest(
             stamp = stamp.toString(),
             reference = reference.toString(),
-            amount = 2,
+            amount = price,
             customer = customer,
             currency = PaymentRequest.Currency.eUR,
-            language = PaymentRequest.Language.eN,
+            language = PaymentRequest.Language.fI,
             items = listOf(
                 Item(
-                    productCode = "111",
-                    category = "health",
-                    vatPercentage = 22,
-                    unitPrice = 2,
+                    productCode = itemCode,
+                    category = itemCategory,
+                    vatPercentage = itemVAT,
+                    unitPrice = price,
                     units = 1,
                     deliveryDate = LocalDate.now()
                 )
@@ -120,6 +138,18 @@ class PaymentController {
     }
 
     /**
+     * Verifies payment based on the received parameters
+     *
+     * @param signature provided signature
+     * @param map parameters
+     * @return true if signatures are same
+     */
+    fun verifyPayment(signature: String, map: Map<String, String>): Boolean {
+        val calculatedSignature = buildHMAC(map, "")
+        return calculatedSignature == signature
+    }
+    
+    /**
      * Fills Customer object from existing keycloak data
      *
      * @param loggedInUser user id
@@ -161,18 +191,5 @@ class PaymentController {
             else -> null
         }
     }
-
-    /**
-     * Verifies payment based on the received parameters
-     *
-     * @param signature provided signature
-     * @param map parameters
-     * @return true if signatures are same
-     */
-    fun verifyPayment(signature: String, map: Map<String, String>): Boolean {
-        val calculatedSignature = buildHMAC(map, "")
-        return calculatedSignature == signature
-    }
-
 
 }

@@ -1,9 +1,9 @@
 package fi.metatavu.ikioma.rest
 
-import fi.metatavu.ikioma.controllers.EmailController
-import fi.metatavu.ikioma.controllers.KeycloakController
-import fi.metatavu.ikioma.controllers.PaymentController
-import fi.metatavu.ikioma.controllers.PrescriptionRenewalController
+import fi.metatavu.ikioma.email.EmailController
+import fi.metatavu.ikioma.keycloak.KeycloakController
+import fi.metatavu.ikioma.payments.PaymentController
+import fi.metatavu.ikioma.prescriptions.PrescriptionRenewalController
 import fi.metatavu.ikioma.email.api.api.spec.V1Api
 import fi.metatavu.ikioma.email.api.spec.model.PaymentStatus
 import fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal

@@ -1,11 +1,10 @@
-package fi.metatavu.ikioma.controllers
+package fi.metatavu.ikioma.keycloak
 
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.admin.client.KeycloakBuilder
 import org.keycloak.admin.client.resource.UserResource
 import org.keycloak.admin.client.resource.UsersResource
-import org.keycloak.representations.idm.RoleRepresentation
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
