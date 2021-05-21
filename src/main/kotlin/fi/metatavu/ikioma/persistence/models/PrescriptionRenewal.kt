@@ -5,7 +5,22 @@ import java.time.OffsetDateTime
 import java.util.*
 import javax.persistence.*
 
-
+/**
+ * JPA entity for prescription renewal requests
+ *
+ * @property id id which is represented by reference number of initiated payment
+ * @property paymentUrl payment url from the checkout payment service
+ * @property prescriptions list of prescriptions requested
+ * @property transactionId transaction id
+ * @property practitionerUserId practitioner user id
+ * @property stamp unique identifier of the payment
+ * @property checkoutAccount merchant id
+ * @property paymentStatus payment status
+ * @property createdAt created at
+ * @property modifiedAt modified at
+ * @property creatorId creator id
+ * @property lastModifierId last modifier id
+ */
 @Entity
 class PrescriptionRenewal {
 
@@ -23,13 +38,13 @@ class PrescriptionRenewal {
     @Column
     var transactionId: String? = null
 
-    @Column
+    @Column(nullable = false)
     var practitionerUserId: UUID? = null
 
-    @Column
+    @Column(nullable = false)
     var stamp: UUID? = null
 
-    @Column
+    @Column(nullable = false)
     var checkoutAccount: Int? = null
 
     @Column(nullable = false)

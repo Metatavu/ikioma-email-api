@@ -5,14 +5,17 @@ import fi.metatavu.ikioma.email.api.client.models.PrescriptionRenewal
 import fi.metatavu.ikioma.functional.resources.MysqlResource
 import fi.metatavu.ikioma.functional.resources.TestBuilder
 import fi.metatavu.ikioma.integrations.test.functional.resources.KeycloakTestResource
+import io.quarkus.mailer.MockMailbox
 import io.quarkus.test.common.QuarkusTestResource
 import io.quarkus.test.junit.QuarkusTest
 import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils
 import org.eclipse.microprofile.config.ConfigProvider
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
+import javax.inject.Inject
 
 /**
  * Tests Payments API
@@ -24,23 +27,62 @@ import java.util.*
 )
 class PrescriptionRenewalsTestsIT {
 
+    private val korhonenId = UUID.fromString("2d42e574-2670-4855-8169-da642e0ef067")
+    private val korhonenEmail = "onni.korhonen@example.com"
+
+    @Inject
+    private lateinit var mailbox: MockMailbox
+
+    @BeforeEach
+    fun init() {
+        mailbox.clear()
+    }
+
+    @Test
+    fun prescriptionRenewalWrongRole() {
+        TestBuilder().use { builder ->
+            val createdPrescription = builder.teroAyramoNonRegistered().prescriptionRenewals.assertCreateFailStatus(
+                403,
+                PrescriptionRenewal(
+                    status = PaymentStatus.nOTPAID,
+                    practitionerUserId = korhonenId,
+                    prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
+                )
+            )
+        }
+    }
+
+    @Test
+    fun prescriptionRenewalNoPractitioner() {
+        TestBuilder().use { builder ->
+            builder.teroAyramo().prescriptionRenewals.assertCreateFailStatus(
+                404,
+                PrescriptionRenewal(
+                    status = PaymentStatus.nOTPAID,
+                    practitionerUserId = UUID.randomUUID(),
+                    prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
+                )
+            )
+        }
+    }
+
     /**
      * Tests creating prescription renewal request and approving it with:
      *  -checkout request where one field differs form the database
      *  -checkout request where signature is incorrect
      *  -correct checkout request
-     *  and verifies that after successful payment the prescription renewal object is removed from the database
+     *  and verifies that after successful payment the prescription renewal object is removed from the database and
+     *  the email to practitioner was sent
      */
     @Test
     fun prescriptionRenewal() {
         TestBuilder().use { builder ->
-            val practitionerId = UUID.randomUUID()
-
+            //todo this test assumes Onni korhonen to be practitioner
             val createdPrescription = builder.teroAyramo().prescriptionRenewals.create(
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
-                    practitionerUserId = practitionerId,
-                    prescriptions = arrayOf("Burana", "Even more Burana", "All the burana")
+                    practitionerUserId = korhonenId,
+                    prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
                 )
             )
 
@@ -107,6 +149,14 @@ class PrescriptionRenewalsTestsIT {
             )
 
             builder.teroAyramo().prescriptionRenewals.assertFindFailStatus(404, createdPrescription.id)
+            val practitionerMessages = mailbox.getMessagesSentTo(korhonenEmail)
+
+            Assertions.assertNotNull(practitionerMessages)
+            Assertions.assertEquals(1, practitionerMessages.size)
+            Assertions.assertEquals("Prescription renewal request for Tero Testi Äyrämö", practitionerMessages[0].subject)
+            Assertions.assertTrue(practitionerMessages[0].text.startsWith("Patient 010170-999R is requesting prescription renewal for"))
+            Assertions.assertTrue(practitionerMessages[0].text.contains("Even more Burana"))
+            Assertions.assertTrue(practitionerMessages[0].text.contains("All the Burana"))
         }
     }
 

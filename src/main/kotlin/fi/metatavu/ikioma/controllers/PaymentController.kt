@@ -111,8 +111,6 @@ class PaymentController {
             buildHMAC(headers, Serializer.moshi.adapter(PaymentRequest::class.java).toJson(paymentRequest))
         )
 
-        println(sendPayment)
-
         prescriptionRenewal.id = reference
         prescriptionRenewal.stamp = stamp
         prescriptionRenewal.checkoutAccount = merchantId

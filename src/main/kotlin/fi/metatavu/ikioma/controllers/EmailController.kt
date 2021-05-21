@@ -5,7 +5,7 @@ import io.quarkus.mailer.Mail
 import io.quarkus.mailer.Mailer
 import io.quarkus.mailer.reactive.ReactiveMailer
 import io.smallrye.mutiny.Uni
-import java.util.*
+import java.util.logging.Logger
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
 
@@ -20,6 +20,9 @@ class EmailController {
 
     @Inject
     private lateinit var reactiveMailer: ReactiveMailer
+
+    @Inject
+    private lateinit var logger: org.slf4j.Logger
 
     /**
      * Sends email using blocking mailer service
@@ -44,7 +47,27 @@ class EmailController {
         return reactiveMailer.send(Mail.withText(to, subject, textData))
     }
 
-   fun sendPrescriptionRenewalSuccess(prescriptionRenewal: PrescriptionRenewal, email: UUID, ssn: String) {
-
+    /**
+     * Sends prescription renewal request to the practitioner
+     *
+     * @param prescriptionRenewal prescription renewal object
+     * @param email practitioner email
+     * @param ssn patient ssn
+     * @param firstName patient first name
+     * @param lastName patient last name
+     */
+    fun sendPrescriptionRenewalEmail(
+        prescriptionRenewal: PrescriptionRenewal,
+        email: String,
+        ssn: String,
+        firstName: String,
+        lastName: String
+    ) {
+        logger.info("Sending prescription renewal messages to $email")
+        sendEmail(
+            email,
+            "Prescription renewal request for $firstName $lastName",
+            "Patient $ssn is requesting prescription renewal for ${prescriptionRenewal.prescriptions!!.joinToString(", ")}"
+        )
     }
 }

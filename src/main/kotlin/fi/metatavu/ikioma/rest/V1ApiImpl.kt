@@ -1,6 +1,7 @@
 package fi.metatavu.ikioma.rest
 
 import fi.metatavu.ikioma.controllers.EmailController
+import fi.metatavu.ikioma.controllers.KeycloakController
 import fi.metatavu.ikioma.controllers.PaymentController
 import fi.metatavu.ikioma.controllers.PrescriptionRenewalController
 import fi.metatavu.ikioma.email.api.api.spec.V1Api
@@ -37,6 +38,9 @@ class V1ApiImpl : V1Api, AbstractApi() {
     private lateinit var prescriptionRenewalTranslator: PrescriptionRenewalTranslator
 
     @Inject
+    private lateinit var keycloakController: KeycloakController
+
+    @Inject
     private lateinit var logger: Logger
 
     override fun checkoutFinlandCancel(): Response {
@@ -56,6 +60,10 @@ class V1ApiImpl : V1Api, AbstractApi() {
         signature: String
     ): Response {
         val userId = loggedUserId ?: return createUnauthorized("Unauthorized")
+        val ssn = keycloakController.getUserSSN(userId) ?: return createNotFound("User with ID $userId could not be found!")
+        val firstName = keycloakController.getFirstName(userId) ?: return createNotFound("User with ID $userId could not be found!")
+        val lastName = keycloakController.getLastName(userId) ?: return createNotFound("User with ID $userId could not be found!")
+
         val refNo: UUID?
         try {
             refNo = UUID.fromString(checkoutReference)
@@ -82,9 +90,11 @@ class V1ApiImpl : V1Api, AbstractApi() {
             return createForbidden("Bad signature")
         }
 
+        val practitionerId = prescriptionRenewal.practitionerUserId ?: return createBadRequest("No practitioner id provided")
+        val practitionerEmail = keycloakController.getUserEmail(practitionerId) ?: return createNotFound("No practitioner email found")
+
         prescriptionController.updatePrescriptionRenewalStatus(prescriptionRenewal, PaymentStatus.PAID)
-        //send email
-       // emailController.sendPrescriptionRenewalSuccess(prescriptionRenewal, userId, "ssn")
+        emailController.sendPrescriptionRenewalEmail(prescriptionRenewal, practitionerEmail, ssn, firstName, lastName)
 
         prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
         return createOk()
@@ -93,6 +103,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
     @RolesAllowed(value = [UserRole.PATIENT.name])
     override fun createPrescriptionRenewal(prescriptionRenewal: PrescriptionRenewal): Response {
         val userId = loggedUserId ?: return createUnauthorized("Unauthorized")
+        keycloakController.getUserEmail(prescriptionRenewal.practitionerUserId) ?: return createNotFound("No practitioner email found")
 
         val paymentData = paymentController.initRenewPrescriptionPayment(prescriptionRenewal, userId)
         paymentData ?: return createInternalServerError("Failed to create payment")

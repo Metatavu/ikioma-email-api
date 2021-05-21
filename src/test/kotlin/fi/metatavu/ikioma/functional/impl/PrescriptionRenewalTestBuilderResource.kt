@@ -62,4 +62,21 @@ class PrescriptionRenewalTestBuilderResource(
             fail(e.message)
         }
     }
+
+    /**
+     * Expects prescription renewal request to fail with given status
+     *
+     * @param expectedStatus expected status
+     * @param prescriptionRenewal new entity
+     */
+    fun assertCreateFailStatus(expectedStatus: Int, prescriptionRenewal: PrescriptionRenewal) {
+        try {
+            api.createPrescriptionRenewal(prescriptionRenewal)
+            fail(String.format("Expected create to fail with message %d", expectedStatus))
+        } catch (e: ClientException) {
+            assertClientExceptionStatus(expectedStatus, e)
+        } catch (e: Exception) {
+            fail(e.message)
+        }
+    }
 }
