@@ -48,10 +48,6 @@ class PaymentController {
     private var itemVAT: Long = 0
 
     @Inject
-    @ConfigProperty(name = "checkout.item.unitPrice")
-    private var price: Long = 0
-
-    @Inject
     @ConfigProperty(name = "checkout.merchant.secret")
     private lateinit var merchantSecret: String
 
@@ -87,7 +83,7 @@ class PaymentController {
         val paymentRequest = PaymentRequest(
             stamp = stamp.toString(),
             reference = reference.toString(),
-            amount = price,
+            amount = prescriptionRenewal.price,
             customer = customer,
             currency = PaymentRequest.Currency.eUR,
             language = PaymentRequest.Language.fI,
@@ -96,7 +92,7 @@ class PaymentController {
                     productCode = itemCode,
                     category = itemCategory,
                     vatPercentage = itemVAT,
-                    unitPrice = price,
+                    unitPrice = prescriptionRenewal.price,
                     units = 1,
                     deliveryDate = LocalDate.now()
                 )

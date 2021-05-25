@@ -56,4 +56,12 @@
         <renameColumn tableName="prescriptions" oldColumnName="Prescription" columnDataType="varchar(100)" newColumnName="prescriptionname"/>
         <modifyDataType tableName="prescriptions" columnName="prescriptionname" newDataType="varchar(500)"/>
     </changeSet>
+
+    <changeSet id="prescriptionprice" author="Katja Danilova">
+        <addColumn tableName="prescriptionrenewal">
+            <column name="price" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

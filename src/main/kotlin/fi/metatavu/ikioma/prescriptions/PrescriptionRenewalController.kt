@@ -27,6 +27,7 @@ class PrescriptionRenewalController {
      * @param paymentStatus payment status
      * @param paymentUrl payment url
      * @param stamp stamp
+     * @param price total price
      * @param transactionId transaction id
      * @param userId user id
      * @return saved prescription renewal object
@@ -38,6 +39,7 @@ class PrescriptionRenewalController {
         paymentStatus: PaymentStatus,
         paymentUrl: String,
         stamp: UUID,
+        price: Long,
         checkoutAccount: Int,
         transactionId: String?,
         userId: UUID
@@ -50,6 +52,7 @@ class PrescriptionRenewalController {
             practitionerUserId = practitionerUserId,
             paymentStatus = paymentStatus,
             stamp = stamp,
+            price = price,
             checkoutAccount = checkoutAccount,
             creatorId = userId,
             lastModifierId = userId

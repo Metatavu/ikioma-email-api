@@ -14,6 +14,7 @@ import javax.persistence.*
  * @property transactionId transaction id
  * @property practitionerUserId practitioner user id
  * @property stamp unique identifier of the payment
+ * @property price total price
  * @property checkoutAccount merchant id
  * @property paymentStatus payment status
  * @property createdAt created at
@@ -43,6 +44,9 @@ class PrescriptionRenewal {
 
     @Column(nullable = false)
     lateinit var stamp: UUID
+
+    @Column(nullable = false)
+    var price: Long? = null
 
     @Column(nullable = false)
     var checkoutAccount: Int? = null

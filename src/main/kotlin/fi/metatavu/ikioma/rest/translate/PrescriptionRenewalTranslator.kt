@@ -27,7 +27,8 @@ class PrescriptionRenewalTranslator: AbstractTranslator<PrescriptionRenewal, fi.
         prescriptionRenewal.stamp = entity.stamp
         prescriptionRenewal.checkoutAccount = entity.checkoutAccount
         prescriptionRenewal.practitionerUserId = entity.practitionerUserId
-        prescriptionRenewal.prescriptions = entity.prescriptions?.toList()
+        prescriptionRenewal.prescriptions = entity.prescriptions.toList()
+        prescriptionRenewal.price = entity.price
         prescriptionRenewal.transactionId = entity.transactionId
         prescriptionRenewal.status = enumValueOf(entity.paymentStatus.toString())
         return prescriptionRenewal

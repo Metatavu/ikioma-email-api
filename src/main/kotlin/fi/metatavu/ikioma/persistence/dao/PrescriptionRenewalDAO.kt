@@ -21,11 +21,12 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
      * @param transactionId transaction id
      * @param prescriptions prescriptions list
      * @param practitionerUserId practitioner user id
-     * @param paymentStatus PaymentStatus?
-     * @param paymentUrl String?
-     * @param stamp String?
-     * @param creatorId UUID
-     * @param lastModifierId UUID
+     * @param paymentStatus payment status
+     * @param paymentUrl payment url provided by checkout finland
+     * @param stamp unique payment id
+     * @param price price
+     * @param creatorId user id
+     * @param lastModifierId user id
      * @return PrescriptionRenewal
      */
     fun create(
@@ -36,6 +37,7 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
         paymentStatus: PaymentStatus,
         paymentUrl: String,
         stamp: UUID,
+        price: Long,
         checkoutAccount: Int,
         creatorId: UUID,
         lastModifierId: UUID
@@ -48,6 +50,7 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
         prescriptionRenewal.paymentStatus = paymentStatus
         prescriptionRenewal.paymentUrl = paymentUrl
         prescriptionRenewal.stamp = stamp
+        prescriptionRenewal.price = price
         prescriptionRenewal.checkoutAccount = checkoutAccount
         prescriptionRenewal.creatorId = creatorId
         prescriptionRenewal.lastModifierId = lastModifierId

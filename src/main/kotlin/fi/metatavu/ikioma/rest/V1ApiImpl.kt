@@ -111,6 +111,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         val newPrescriptionRenewal = prescriptionController.createPrescriptionRenewal(
             id = paymentData.id,
             stamp = paymentData.stamp,
+            price = paymentData.price,
             prescriptions = prescriptionRenewal.prescriptions,
             practitionerUserId = prescriptionRenewal.practitionerUserId,
             paymentStatus = prescriptionRenewal.status,

@@ -48,6 +48,7 @@ class PrescriptionRenewalsTestsIT {
                 403,
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
+                    price = 10L,
                     practitionerUserId = korhonenId,
                     prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
                 )
@@ -62,6 +63,7 @@ class PrescriptionRenewalsTestsIT {
                 404,
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
+                    price = 10L,
                     practitionerUserId = UUID.randomUUID(),
                     prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
                 )
@@ -81,12 +83,14 @@ class PrescriptionRenewalsTestsIT {
     fun prescriptionRenewal() {
         TestBuilder().use { builder ->
             //todo this test assumes Onni korhonen to be practitioner
+            val prescriptionRenewal = PrescriptionRenewal(
+                status = PaymentStatus.nOTPAID,
+                price = 120L,
+                practitionerUserId = korhonenId,
+                prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
+            )
             val createdPrescription = builder.teroAyramo().prescriptionRenewals.create(
-                PrescriptionRenewal(
-                    status = PaymentStatus.nOTPAID,
-                    practitionerUserId = korhonenId,
-                    prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
-                )
+                prescriptionRenewal
             )
 
             Assertions.assertNotNull(createdPrescription.transactionId)
