@@ -11,8 +11,6 @@ import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.openapitools.client.infrastructure.Serializer
-import org.slf4j.Logger
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -60,8 +58,11 @@ class PaymentController {
     @Inject
     private lateinit var keycloakController: KeycloakController
 
-    @Inject
-    private lateinit var logger: Logger
+    protected val accountHeader: String = "checkout-account"
+    protected val algorithmHeader: String = "checkout-algorithm"
+    protected val methodHeader: String = "checkout-method"
+    protected val nonceHeader: String = "checkout-nonce"
+    protected val timestampHeader: String = "checkout-timestamp"
 
     /**
      * Sends the payment request to Checkout Finland
@@ -69,7 +70,7 @@ class PaymentController {
      * @param prescriptionRenewal original renewal object
      * @param loggedInUser user id
      * @return filled prescription renewal
-     * */
+     */
     fun initRenewPrescriptionPayment(
         prescriptionRenewal: PrescriptionRenewal,
         loggedInUser: UUID
@@ -109,23 +110,22 @@ class PaymentController {
                 cancel = "$redirectBaseUrl/cancel"
             )
         )
-        logger.info("Payment with stamp $stamp is created")
 
         val headers = mapOf(
-            Pair("checkout-account", merchantId),
-            Pair("checkout-algorithm", algorithm),
-            Pair("checkout-method", "POST"),
-            Pair("checkout-nonce", nonce),
-            Pair("checkout-timestamp", timestamp)
+            Pair(accountHeader, merchantId),
+            Pair(algorithmHeader, algorithm),
+            Pair(methodHeader, "POST"),
+            Pair(nonceHeader, nonce),
+            Pair(timestampHeader, timestamp)
         )
 
         val sendPayment = paymentsApi.createPayment(
             paymentRequest,
-            headers["checkout-account"] as Int?,
-            headers["checkout-algorithm"] as String?,
-            headers["checkout-method"] as String?,
-            headers["checkout-timestamp"] as OffsetDateTime?,
-            headers["checkout-nonce"] as String?,
+            headers[accountHeader] as Int?,
+            headers[algorithmHeader] as String?,
+            headers[methodHeader] as String?,
+            headers[timestampHeader] as OffsetDateTime?,
+            headers[nonceHeader] as String?,
             buildHMAC(headers, Serializer.moshi.adapter(PaymentRequest::class.java).toJson(paymentRequest))
         )
 

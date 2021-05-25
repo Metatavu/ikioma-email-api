@@ -62,11 +62,10 @@ class EmailController {
         firstName: String,
         lastName: String
     ) {
-        logger.info("Sending prescription renewal messages to $email")
         sendEmail(
             email,
-            "Prescription renewal request for $firstName $lastName",
-            "Patient $ssn is requesting prescription renewal for ${prescriptionRenewal.prescriptions.joinToString(", ")}"
+            "SEC reseptinuusintapyyntö",
+            "Henkilö $firstName $lastName ($ssn) pyytää reseptin uusintaa resepteille ${prescriptionRenewal.prescriptions.joinToString(", ")}"
         )
     }
 }

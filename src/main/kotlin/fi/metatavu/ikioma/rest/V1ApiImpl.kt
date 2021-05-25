@@ -40,9 +40,6 @@ class V1ApiImpl : V1Api, AbstractApi() {
     @Inject
     private lateinit var keycloakController: KeycloakController
 
-    @Inject
-    private lateinit var logger: Logger
-
     override fun checkoutFinlandCancel(): Response {
         TODO("Not yet implemented")
     }
@@ -53,6 +50,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         val checkoutParameters = getCheckoutParameters()
 
         val checkoutReference = checkoutParameters["checkout-reference"] ?: return createBadRequest("No checkout reference")
+        val checkoutStatus = checkoutParameters["checkout-status"] ?: return createBadRequest("No checkout status")
         val checkoutStamp = checkoutParameters["checkout-stamp"] ?: return createBadRequest("No checkout stamp")
         val checkoutTransactionId = checkoutParameters["checkout-transaction-id"] ?: return createBadRequest("No checkout transaction id")
 
@@ -79,13 +77,26 @@ class V1ApiImpl : V1Api, AbstractApi() {
             return createForbidden("Bad signature")
         }
 
-        val practitionerId = prescriptionRenewal.practitionerUserId ?: return createBadRequest("No practitioner id provided")
-        val practitionerEmail = keycloakController.getUserEmail(practitionerId) ?: return createNotFound("No practitioner email found")
+        val practitionerEmail = keycloakController.getUserEmail(prescriptionRenewal.practitionerUserId) ?: return createNotFound("No practitioner email found")
 
-        prescriptionController.updatePrescriptionRenewalStatus(prescriptionRenewal, PaymentStatus.PAID)
-        emailController.sendPrescriptionRenewalEmail(prescriptionRenewal, practitionerEmail, ssn, firstName, lastName)
+        when (checkoutStatus) {
+            "ok" -> {
+                prescriptionController.updatePrescriptionRenewalStatus(prescriptionRenewal, PaymentStatus.PAID)
+                emailController.sendPrescriptionRenewalEmail(
+                    prescriptionRenewal,
+                    practitionerEmail,
+                    ssn,
+                    firstName,
+                    lastName
+                )
+                prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
+            }
+            "pending", "delayed" -> return createAccepted()
+            "fail" -> {
+                return createBadRequest("Payment failed")
+            }
+        }
 
-        prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
         return createOk()
     }
 

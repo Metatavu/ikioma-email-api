@@ -16,7 +16,7 @@ class PrescriptionRenewalTestBuilderResource(
     testBuilder: TestBuilder,
     private val accessTokenProvider: AccessTokenProvider?,
     apiClient: ApiClient
-) : ApiTestBuilderResource<PrescriptionRenewal, ApiClient?>(testBuilder, apiClient) {
+): ApiTestBuilderResource<PrescriptionRenewal, ApiClient?>(testBuilder, apiClient) {
 
     override fun getApi(): PrescriptionRenewalsApi {
         ApiClient.accessToken = accessTokenProvider?.accessToken

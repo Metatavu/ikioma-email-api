@@ -5,6 +5,9 @@ import java.net.URI
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 
+/**
+ * Translator class for JPA Prescription Renewal entities to REST Prescription Renewal objects
+ */
 @ApplicationScoped
 class PrescriptionRenewalTranslator: AbstractTranslator<PrescriptionRenewal, fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal>() {
 
@@ -12,7 +15,6 @@ class PrescriptionRenewalTranslator: AbstractTranslator<PrescriptionRenewal, fi.
      * Translates JPA prescription renewal into REST prescription renewal
      *
      * @param entity JPA prescription renewal
-     *
      * @return REST prescription renewal
      */
     override fun translate(entity: PrescriptionRenewal): fi.metatavu.ikioma.email.api.spec.model.PrescriptionRenewal {
