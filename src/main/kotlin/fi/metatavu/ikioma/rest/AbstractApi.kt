@@ -2,14 +2,16 @@ package fi.metatavu.ikioma.rest
 
 import fi.metatavu.ikioma.email.api.spec.model.Error
 import org.eclipse.microprofile.jwt.JsonWebToken
+import org.jboss.resteasy.spi.HttpRequest
 import org.slf4j.Logger
-import java.lang.IllegalArgumentException
 import java.util.*
 import javax.enterprise.context.RequestScoped
 import javax.inject.Inject
 import javax.ws.rs.core.Context
+import javax.ws.rs.core.MultivaluedMap
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.SecurityContext
+import kotlin.collections.HashMap
 
 /**
  * Abstract base class for all API services
@@ -27,6 +29,9 @@ abstract class AbstractApi {
 
     @Context
     private lateinit var securityContext: SecurityContext
+
+    @Context
+    private val request: HttpRequest? = null
 
     /**
      * Returns logged user id
@@ -47,6 +52,17 @@ abstract class AbstractApi {
             return null
         }
 
+    /**
+     * Returns parameters from the current request
+     *
+     * @return map of checkout parameters
+     */
+    protected fun getCheckoutParameters(): MutableMap<String, String> {
+        val sortedMap = request?.uri?.queryParameters?.filterKeys { it.startsWith("checkout-") }
+        val checkoutParameters = mutableMapOf<String,String>()
+        sortedMap?.forEach { (s, mutableList) -> checkoutParameters[s] = mutableList[0] }
+        return checkoutParameters
+    }
 
     /**
      * Constructs ok response

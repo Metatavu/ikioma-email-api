@@ -1,7 +1,7 @@
 package fi.metatavu.ikioma.functional.resources
 
 import fi.metatavu.ikioma.email.api.client.infrastructure.ApiClient
-import fi.metatavu.ikioma.integrations.test.functional.auth.TestBuilderAuthentication
+import fi.metatavu.ikioma.functional.auth.TestBuilderAuthentication
 import fi.metatavu.ikioma.integrations.test.functional.settings.ApiTestSettings
 import fi.metatavu.jaxrs.test.functional.builder.AbstractTestBuilder
 import fi.metatavu.jaxrs.test.functional.builder.auth.AccessTokenProvider
