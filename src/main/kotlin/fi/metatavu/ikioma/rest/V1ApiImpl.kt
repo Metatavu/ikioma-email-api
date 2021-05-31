@@ -15,6 +15,8 @@ import javax.annotation.security.RolesAllowed
 import javax.enterprise.context.RequestScoped
 import javax.inject.Inject
 import javax.transaction.Transactional
+import javax.validation.constraints.NotNull
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
 
@@ -40,8 +42,33 @@ class V1ApiImpl : V1Api, AbstractApi() {
     @Inject
     private lateinit var keycloakController: KeycloakController
 
-    override fun checkoutFinlandCancel(): Response {
-        TODO("Not yet implemented")
+    override fun checkoutFinlandCancel(signature: String): Response? {
+        val checkoutParameters = getCheckoutParameters()
+
+        val checkoutReference = checkoutParameters["checkout-reference"] ?: return createBadRequest("No checkout reference")
+        val checkoutStatus = checkoutParameters["checkout-status"] ?: return createBadRequest("No checkout status")
+        val checkoutStamp = checkoutParameters["checkout-stamp"] ?: return createBadRequest("No checkout stamp")
+        val checkoutTransactionId = checkoutParameters["checkout-transaction-id"] ?: return createBadRequest("No checkout transaction id")
+
+        val refNo: UUID?
+        try {
+            refNo = UUID.fromString(checkoutReference)
+        } catch (e: IllegalArgumentException) {
+            return createBadRequest("Invalid reference no")
+        }
+
+        val prescriptionRenewal = prescriptionController.findPrescriptionRenewalByReference(reference = refNo)
+        prescriptionRenewal ?: return createNotFound()
+        if (prescriptionRenewal.stamp != UUID.fromString(checkoutStamp) || prescriptionRenewal.transactionId != checkoutTransactionId) {
+            return createForbidden("Payment information does not match")
+        }
+
+        if (!paymentController.verifyPayment(signature, checkoutParameters)) {
+            return createForbidden("Bad signature")
+        }
+
+        prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
+        return createNoContent()
     }
 
     override fun checkoutFinlandSuccess(
@@ -63,7 +90,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
 
         val prescriptionRenewal = prescriptionController.findPrescriptionRenewalByReference(reference = refNo)
         prescriptionRenewal ?: return createNotFound()
-        val userId = prescriptionRenewal.creatorId ?: return createNotFound()
+        val userId = prescriptionRenewal.creatorId
 
         val ssn = keycloakController.getUserSSN(userId) ?: return createNotFound("User with ID $userId could not be found!")
         val firstName = keycloakController.getFirstName(userId) ?: return createNotFound("User with ID $userId could not be found!")
