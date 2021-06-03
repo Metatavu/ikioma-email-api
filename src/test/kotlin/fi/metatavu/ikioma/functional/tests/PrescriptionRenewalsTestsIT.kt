@@ -186,6 +186,108 @@ class PrescriptionRenewalsTestsIT {
     }
 
     /**
+     * Tests prescription renewal request when the payment was calcelled
+     */
+    @Test
+    fun prescriptionRenewalPaymentCancel() {
+        TestBuilder().use { builder ->
+            //todo this test assumes Onni korhonen to be practitioner
+            val prescriptionRenewal = PrescriptionRenewal(
+                status = PaymentStatus.nOTPAID,
+                price = 120L,
+                practitionerUserId = korhonenId,
+                prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
+            )
+            val createdPrescription = builder.teroAyramo().prescriptionRenewals.create(
+                prescriptionRenewal
+            )
+
+            Assertions.assertNotNull(createdPrescription.transactionId)
+            Assertions.assertNotNull(createdPrescription.paymentUrl)
+            Assertions.assertNotNull(createdPrescription.id)
+            Assertions.assertNotNull(createdPrescription.checkoutAccount)
+
+            val foundRenewalRequest = builder.teroAyramo().prescriptionRenewals.find(createdPrescription.id!!)
+            Assertions.assertEquals(createdPrescription.transactionId, foundRenewalRequest.transactionId)
+            Assertions.assertEquals(createdPrescription.practitionerUserId, foundRenewalRequest.practitionerUserId)
+            Assertions.assertEquals(createdPrescription.status, foundRenewalRequest.status)
+            Assertions.assertEquals(3, foundRenewalRequest.prescriptions.size)
+
+            val algorithm = "sha256"
+            val provider = "spankki"
+            val status = "ok"
+            val amount = 1
+
+            //different field
+            RestAssured.given()
+                .queryParam("signature", UUID.randomUUID().toString())
+                .queryParams(
+                    mapOf<String, Any>(
+                        Pair("checkout-account", foundRenewalRequest.checkoutAccount!!),
+                        Pair("checkout-amount", amount),
+                        Pair("checkout-provider", provider),
+                        Pair("checkout-algorithm", algorithm),
+                        Pair("checkout-reference", foundRenewalRequest.id!!.toString()),
+                        Pair("checkout-status", status),
+                        Pair("checkout-stamp", UUID.randomUUID().toString()),
+                        Pair("checkout-transaction-id", foundRenewalRequest.transactionId!!)
+                    )
+                )
+                .`when`()
+                .get("${builder.settings.apiBasePath}/v1/checkoutFinland/success")
+                .then().assertThat().statusCode(403).and().body("message", equalTo("Payment information does not match"))
+
+            //wrong signature
+            RestAssured.given()
+                .queryParam("signature", UUID.randomUUID().toString())
+                .queryParams(
+                    mapOf<String, Any>(
+                        Pair("checkout-account", foundRenewalRequest.checkoutAccount),
+                        Pair("checkout-amount", amount),
+                        Pair("checkout-provider", provider),
+                        Pair("checkout-algorithm", algorithm),
+                        Pair("checkout-reference", foundRenewalRequest.id.toString()),
+                        Pair("checkout-status", status),
+                        Pair("checkout-stamp", foundRenewalRequest.stamp!!.toString()),
+                        Pair("checkout-transaction-id", foundRenewalRequest.transactionId)
+                    )
+                )
+                .`when`()
+                .get("${builder.settings.apiBasePath}/v1/checkoutFinland/success")
+                .then().assertThat().statusCode(403).and().body("message", equalTo("Bad signature"))
+
+            //ok
+            RestAssured.given()
+                .queryParam(
+                    "signature", calculateHmac(
+                        checkoutAccount = foundRenewalRequest.checkoutAccount!!,
+                        status = status,
+                        amount = amount,
+                        provider = provider,
+                        stamp = foundRenewalRequest.stamp!!,
+                        reference = foundRenewalRequest.id!!,
+                        transactionId = foundRenewalRequest.transactionId!!
+                    )
+                )
+                .queryParams(
+                    mapOf<String, Any>(
+                        Pair("checkout-account", foundRenewalRequest.checkoutAccount),
+                        Pair("checkout-amount", amount),
+                        Pair("checkout-provider", provider),
+                        Pair("checkout-algorithm", algorithm),
+                        Pair("checkout-reference", foundRenewalRequest.id.toString()),
+                        Pair("checkout-status", status),
+                        Pair("checkout-stamp", foundRenewalRequest.stamp),
+                        Pair("checkout-transaction-id", foundRenewalRequest.transactionId)
+                    )
+                )
+                .`when`()
+                .get("${builder.settings.apiBasePath}/v1/checkoutFinland/cancel")
+                .then().assertThat().statusCode(204)
+        }
+    }
+
+    /**
      * Calculates HMAC 256 for test checkout success message with some values predefined
      */
     private fun calculateHmac(
