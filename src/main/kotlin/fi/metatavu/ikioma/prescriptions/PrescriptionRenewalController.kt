@@ -39,7 +39,7 @@ class PrescriptionRenewalController {
         paymentStatus: PaymentStatus,
         paymentUrl: String,
         stamp: UUID,
-        price: Long,
+        price: Int,
         checkoutAccount: Int,
         transactionId: String?,
         userId: UUID

@@ -46,7 +46,7 @@ class PrescriptionRenewal {
     lateinit var stamp: UUID
 
     @Column(nullable = false)
-    var price: Long? = null
+    var price: Int? = null
 
     @Column(nullable = false)
     var checkoutAccount: Int? = null

@@ -48,7 +48,8 @@ class PrescriptionRenewalsTestsIT {
                 403,
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
-                    price = 10L,
+                    price = 100,
+                    redirectUrl = "https://example.fi/v1/checkoutFinland",
                     practitionerUserId = korhonenId,
                     prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
                 )
@@ -63,7 +64,8 @@ class PrescriptionRenewalsTestsIT {
                 404,
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
-                    price = 10L,
+                    price = 100,
+                    redirectUrl = "https://example.fi/v1/checkoutFinland",
                     practitionerUserId = UUID.randomUUID(),
                     prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
                 )
@@ -85,7 +87,8 @@ class PrescriptionRenewalsTestsIT {
             //todo this test assumes Onni korhonen to be practitioner
             val prescriptionRenewal = PrescriptionRenewal(
                 status = PaymentStatus.nOTPAID,
-                price = 120L,
+                price = 1200,
+                redirectUrl = "https://example.fi/v1/checkoutFinland",
                 practitionerUserId = korhonenId,
                 prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
             )
@@ -194,10 +197,12 @@ class PrescriptionRenewalsTestsIT {
             //todo this test assumes Onni korhonen to be practitioner
             val prescriptionRenewal = PrescriptionRenewal(
                 status = PaymentStatus.nOTPAID,
-                price = 120L,
+                price = 1200,
+                redirectUrl = "https://example.fi/v1/checkoutFinland",
                 practitionerUserId = korhonenId,
                 prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
             )
+
             val createdPrescription = builder.teroAyramo().prescriptionRenewals.create(
                 prescriptionRenewal
             )
@@ -260,13 +265,13 @@ class PrescriptionRenewalsTestsIT {
             RestAssured.given()
                 .queryParam(
                     "signature", calculateHmac(
-                        checkoutAccount = foundRenewalRequest.checkoutAccount!!,
+                        checkoutAccount = foundRenewalRequest.checkoutAccount,
                         status = status,
                         amount = amount,
                         provider = provider,
-                        stamp = foundRenewalRequest.stamp!!,
-                        reference = foundRenewalRequest.id!!,
-                        transactionId = foundRenewalRequest.transactionId!!
+                        stamp = foundRenewalRequest.stamp,
+                        reference = foundRenewalRequest.id,
+                        transactionId = foundRenewalRequest.transactionId
                     )
                 )
                 .queryParams(
