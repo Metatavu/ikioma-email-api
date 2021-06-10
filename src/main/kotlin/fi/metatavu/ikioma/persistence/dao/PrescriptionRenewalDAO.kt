@@ -37,7 +37,7 @@ class PrescriptionRenewalDAO : AbstractDAO<PrescriptionRenewal>() {
         paymentStatus: PaymentStatus,
         paymentUrl: String,
         stamp: UUID,
-        price: Long,
+        price: Int,
         checkoutAccount: Int,
         creatorId: UUID,
         lastModifierId: UUID

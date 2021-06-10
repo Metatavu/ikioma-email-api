@@ -32,8 +32,8 @@ class PaymentController {
     private var merchantId: Int = 0
 
     @Inject
-    @ConfigProperty(name = "checkout.redirectBaseUrl")
-    private lateinit var redirectBaseUrl: String
+    @ConfigProperty(name = "checkout.callbackBaseUrl")
+    private lateinit var callbackBaseUrl: String
 
     @Inject
     @ConfigProperty(name = "checkout.item.code")
@@ -78,12 +78,13 @@ class PaymentController {
 
         val customer = buildCustomerObject(loggedInUser)
         customer ?: return null
+        val price = prescriptionRenewal.price.toLong()
 
         val paymentsApi = PaymentsApi()
         val paymentRequest = PaymentRequest(
             stamp = stamp.toString(),
             reference = reference.toString(),
-            amount = prescriptionRenewal.price,
+            amount = price,
             customer = customer,
             currency = PaymentRequest.Currency.eUR,
             language = PaymentRequest.Language.fI,
@@ -92,18 +93,18 @@ class PaymentController {
                     productCode = itemCode,
                     category = itemCategory,
                     vatPercentage = itemVAT,
-                    unitPrice = prescriptionRenewal.price,
+                    unitPrice = price,
                     units = 1,
                     deliveryDate = LocalDate.now()
                 )
             ),
             callbackUrls = Callbacks(
-                success = "$redirectBaseUrl/success",
-                cancel = "$redirectBaseUrl/cancel"
+                success = "${callbackBaseUrl}/success",
+                cancel = "${callbackBaseUrl}/cancel"
             ),
             redirectUrls = Callbacks(
-                success = "$redirectBaseUrl/success",
-                cancel = "$redirectBaseUrl/cancel"
+                success = "${prescriptionRenewal.redirectUrl}/success",
+                cancel = "${prescriptionRenewal.redirectUrl}/cancel"
             )
         )
 
