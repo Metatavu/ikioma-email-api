@@ -32,6 +32,10 @@ class PaymentController {
     private var merchantId: Int = 0
 
     @Inject
+    @ConfigProperty(name = "checkout.callbackBaseUrl")
+    private lateinit var callbackBaseUrl: String
+
+    @Inject
     @ConfigProperty(name = "checkout.item.code")
     private lateinit var itemCode: String
 
@@ -95,8 +99,8 @@ class PaymentController {
                 )
             ),
             callbackUrls = Callbacks(
-                success = "${prescriptionRenewal.redirectUrl}/success",
-                cancel = "${prescriptionRenewal.redirectUrl}/cancel"
+                success = "${callbackBaseUrl}/success",
+                cancel = "${callbackBaseUrl}/cancel"
             ),
             redirectUrls = Callbacks(
                 success = "${prescriptionRenewal.redirectUrl}/success",
