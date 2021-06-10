@@ -32,7 +32,7 @@ class PrescriptionRenewal {
     var paymentUrl: String? = null
 
     @ElementCollection
-    @CollectionTable(name = "Prescriptions", joinColumns = [JoinColumn(name = "ID")])
+    @CollectionTable(name = "prescriptions", joinColumns = [JoinColumn(name = "ID")])
     @Column(name = "prescriptionname", nullable = false)
     lateinit var prescriptions: Collection<String>
 
