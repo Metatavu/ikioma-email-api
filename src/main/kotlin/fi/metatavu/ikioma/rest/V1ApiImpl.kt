@@ -43,43 +43,29 @@ class V1ApiImpl : V1Api, AbstractApi() {
     private lateinit var keycloakController: KeycloakController
 
     override fun checkoutFinlandCancel(signature: String): Response? {
-        println("Got cancel callback")
         val checkoutParameters = getCheckoutParameters()
 
-        println(checkoutParameters["checkout-reference"])
         val checkoutReference = checkoutParameters["checkout-reference"] ?: return createBadRequest("No checkout reference")
-        println(checkoutParameters["checkout-status"])
         val checkoutStatus = checkoutParameters["checkout-status"] ?: return createBadRequest("No checkout status")
-        println(checkoutParameters["checkout-stamp"])
         val checkoutStamp = checkoutParameters["checkout-stamp"] ?: return createBadRequest("No checkout stamp")
-        println(checkoutParameters["checkout-transaction-id"])
         val checkoutTransactionId = checkoutParameters["checkout-transaction-id"] ?: return createBadRequest("No checkout transaction id")
 
         val refNo: UUID?
         try {
             refNo = UUID.fromString(checkoutReference)
         } catch (e: IllegalArgumentException) {
-            println("Invalid reference no")
             return createBadRequest("Invalid reference no")
         }
 
         val prescriptionRenewal = prescriptionController.findPrescriptionRenewalByReference(reference = refNo)
-        println("prescriptionRenewal: $prescriptionRenewal")
         prescriptionRenewal ?: return createNotFound()
-        println("prescriptionRenewal.stamp: ${prescriptionRenewal.stamp}")
-        println("UUID.fromString(checkoutStamp): ${UUID.fromString(checkoutStamp)}")
-        println("prescriptionRenewal.transactionId: ${prescriptionRenewal.transactionId}")
         if (prescriptionRenewal.stamp != UUID.fromString(checkoutStamp) || prescriptionRenewal.transactionId != checkoutTransactionId) {
-            println("Payment information does not match")
             return createForbidden("Payment information does not match")
         }
 
         if (!paymentController.verifyPayment(signature, checkoutParameters)) {
-            println("Bad signature")
             return createForbidden("Bad signature")
         }
-
-        println("END...")
 
         prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
         return createNoContent()
@@ -88,7 +74,6 @@ class V1ApiImpl : V1Api, AbstractApi() {
     override fun checkoutFinlandSuccess(
         signature: String
     ): Response {
-        println("Got successfult callback")
         val checkoutParameters = getCheckoutParameters()
 
         val checkoutReference = checkoutParameters["checkout-reference"] ?: return createBadRequest("No checkout reference")
@@ -104,7 +89,6 @@ class V1ApiImpl : V1Api, AbstractApi() {
         }
 
         val prescriptionRenewal = prescriptionController.findPrescriptionRenewalByReference(reference = refNo)
-        println("Found corresponding prescription renewal object")
         prescriptionRenewal ?: return createNotFound()
         val userId = prescriptionRenewal.creatorId
 
@@ -116,19 +100,14 @@ class V1ApiImpl : V1Api, AbstractApi() {
             return createForbidden("Payment information does not match")
         }
 
-        println("payment information is valid")
         if (!paymentController.verifyPayment(signature, checkoutParameters)) {
             return createForbidden("Bad signature")
         }
 
-        println("Signature is valid")
         val practitionerEmail = keycloakController.getUserEmail(prescriptionRenewal.practitionerUserId) ?: return createNotFound("No practitioner email found")
-        println("Found practitioner email")
-        println("checkout status $checkoutStatus")
         when (checkoutStatus) {
             "ok" -> {
                 prescriptionController.updatePrescriptionRenewalStatus(prescriptionRenewal, PaymentStatus.PAID)
-                println("updated status to paid")
                 emailController.sendPrescriptionRenewalEmail(
                     prescriptionRenewal,
                     practitionerEmail,
@@ -136,7 +115,6 @@ class V1ApiImpl : V1Api, AbstractApi() {
                     firstName,
                     lastName
                 )
-                println("sent the email")
                 prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
             }
             "pending", "delayed" -> return createAccepted()
