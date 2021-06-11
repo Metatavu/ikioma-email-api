@@ -74,6 +74,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
     override fun checkoutFinlandSuccess(
         signature: String
     ): Response {
+        println("Got successfult callback")
         val checkoutParameters = getCheckoutParameters()
 
         val checkoutReference = checkoutParameters["checkout-reference"] ?: return createBadRequest("No checkout reference")
@@ -89,6 +90,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
         }
 
         val prescriptionRenewal = prescriptionController.findPrescriptionRenewalByReference(reference = refNo)
+        println("Found corresponding prescription renewal object")
         prescriptionRenewal ?: return createNotFound()
         val userId = prescriptionRenewal.creatorId
 
@@ -100,15 +102,19 @@ class V1ApiImpl : V1Api, AbstractApi() {
             return createForbidden("Payment information does not match")
         }
 
+        println("payment information is valid")
         if (!paymentController.verifyPayment(signature, checkoutParameters)) {
             return createForbidden("Bad signature")
         }
 
+        println("Signature is valid")
         val practitionerEmail = keycloakController.getUserEmail(prescriptionRenewal.practitionerUserId) ?: return createNotFound("No practitioner email found")
-
+        println("Found practitioner email")
+        println("checkout status $checkoutStatus")
         when (checkoutStatus) {
             "ok" -> {
                 prescriptionController.updatePrescriptionRenewalStatus(prescriptionRenewal, PaymentStatus.PAID)
+                println("updated status to paid")
                 emailController.sendPrescriptionRenewalEmail(
                     prescriptionRenewal,
                     practitionerEmail,
@@ -116,6 +122,7 @@ class V1ApiImpl : V1Api, AbstractApi() {
                     firstName,
                     lastName
                 )
+                println("sent the email")
                 prescriptionController.deletePrescriptionRenewal(prescriptionRenewal)
             }
             "pending", "delayed" -> return createAccepted()
