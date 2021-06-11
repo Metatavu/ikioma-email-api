@@ -49,7 +49,8 @@ class PrescriptionRenewalsTestsIT {
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
                     price = 100,
-                    redirectUrl = "https://example.fi/v1/checkoutFinland",
+                    successRedirectUrl = "http://example.com/checkoutFinland/success",
+                    cancelRedirectUrl = "http://example.com/checkoutFinland/cancel",
                     practitionerUserId = korhonenId,
                     prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
                 )
@@ -65,7 +66,8 @@ class PrescriptionRenewalsTestsIT {
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
                     price = 100,
-                    redirectUrl = "https://example.fi/v1/checkoutFinland",
+                    successRedirectUrl = "http://example.com/checkoutFinland/success",
+                    cancelRedirectUrl = "http://example.com/checkoutFinland/cancel",
                     practitionerUserId = UUID.randomUUID(),
                     prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
                 )
@@ -88,7 +90,8 @@ class PrescriptionRenewalsTestsIT {
             val prescriptionRenewal = PrescriptionRenewal(
                 status = PaymentStatus.nOTPAID,
                 price = 1200,
-                redirectUrl = "https://example.fi/v1/checkoutFinland",
+                successRedirectUrl = "http://example.com/checkoutFinland/success",
+                cancelRedirectUrl = "http://example.com/checkoutFinland/cancel",
                 practitionerUserId = korhonenId,
                 prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
             )
@@ -198,7 +201,8 @@ class PrescriptionRenewalsTestsIT {
             val prescriptionRenewal = PrescriptionRenewal(
                 status = PaymentStatus.nOTPAID,
                 price = 1200,
-                redirectUrl = "https://example.fi/v1/checkoutFinland",
+                successRedirectUrl = "http://example.com/checkoutFinland/success",
+                cancelRedirectUrl = "http://example.com/checkoutFinland/cancel",
                 practitionerUserId = korhonenId,
                 prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
             )
