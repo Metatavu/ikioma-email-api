@@ -132,7 +132,8 @@ class V1ApiImpl : V1Api, AbstractApi() {
         val userId = loggedUserId ?: return createUnauthorized("Unauthorized")
         keycloakController.getUserEmail(prescriptionRenewal.practitionerUserId) ?: return createNotFound("No practitioner email found")
 
-        prescriptionRenewal.redirectUrl ?: return createBadRequest("Redirect URL is required")
+        prescriptionRenewal.successRedirectUrl ?: return createBadRequest("Success redirect URL is required")
+        prescriptionRenewal.cancelRedirectUrl ?: return createBadRequest("Cancel Redirect URL is required")
         val paymentData = paymentController.initRenewPrescriptionPayment(prescriptionRenewal, userId)
         paymentData ?: return createInternalServerError("Failed to create payment")
 
