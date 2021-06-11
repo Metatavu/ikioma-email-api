@@ -67,10 +67,7 @@ class PaymentController {
      * @param loggedInUser user id
      * @return filled prescription renewal
      */
-    fun initRenewPrescriptionPayment(
-        prescriptionRenewal: PrescriptionRenewal,
-        loggedInUser: UUID
-    ): PrescriptionRenewal? {
+    fun initRenewPrescriptionPayment(prescriptionRenewal: PrescriptionRenewal, loggedInUser: UUID): PrescriptionRenewal? {
         val nonce = UUID.randomUUID().toString()
         val timestamp = OffsetDateTime.now()
         val reference = UUID.randomUUID()
@@ -103,8 +100,8 @@ class PaymentController {
                 cancel = "${callbackBaseUrl}/cancel"
             ),
             redirectUrls = Callbacks(
-                success = "${prescriptionRenewal.redirectUrl}/success",
-                cancel = "${prescriptionRenewal.redirectUrl}/cancel"
+                success = prescriptionRenewal.successRedirectUrl,
+                cancel = prescriptionRenewal.cancelRedirectUrl
             )
         )
 
