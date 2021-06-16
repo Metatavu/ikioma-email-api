@@ -47,4 +47,23 @@
             </column>
         </createTable>
     </changeSet>
+    
+    <changeSet id="collection_to_table" author="Katja Danilova">
+        <renameTable oldTableName="prescriptions" newTableName="prescription"/>
+        <dropPrimaryKey tableName="prescription" constraintName="prescriptionname" />
+        <modifyDataType tableName="prescription" columnName="prescriptionname" newDataType="text"/>
+        <addPrimaryKey tableName="prescription" columnNames="id"/>
+        <createTable tableName="prescriptionrenewalprescription">
+            <column name="id" type="binary(16)">
+                <constraints unique="true" nullable="false" primaryKey="true"/>
+            </column>
+            <column name="prescription_id" type="binary(16)">
+                <constraints nullable="false" primaryKey="true" foreignKeyName="FK_PRESCRIPTIONRENEWALPRESCRIPTION_PRESCRIPTION_ID" referencedColumnNames="id" referencedTableName="prescription"/>
+            </column>
+            <column name="prescriptionrenewal_id" type="binary(16)">
+                <constraints nullable="false" primaryKey="true" foreignKeyName="FK_PRESCRIPTIONRENEWALPRESCRIPTION_PRESCRIPTIONRENEWAL_ID" referencedColumnNames="id" referencedTableName="prescriptionrenewal"/>
+            </column>
+        </createTable>
+
+    </changeSet>
 </databaseChangeLog>

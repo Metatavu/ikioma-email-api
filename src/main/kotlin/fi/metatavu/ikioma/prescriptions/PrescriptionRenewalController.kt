@@ -1,16 +1,17 @@
 package fi.metatavu.ikioma.prescriptions
 
 import fi.metatavu.ikioma.email.api.spec.model.PaymentStatus
+import fi.metatavu.ikioma.persistence.dao.PrescriptionDAO
 import fi.metatavu.ikioma.persistence.dao.PrescriptionRenewalDAO
+import fi.metatavu.ikioma.persistence.dao.PrescriptionRenewalPrescriptionDAO
+import fi.metatavu.ikioma.persistence.models.Prescription
 import fi.metatavu.ikioma.persistence.models.PrescriptionRenewal
-import liquibase.pro.packaged.S
-import java.net.URI
 import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.inject.Inject
 
 /**
- * Controller fpr prescription renewals
+ * Controller for prescription renewals
  */
 @ApplicationScoped
 class PrescriptionRenewalController {
@@ -18,8 +19,14 @@ class PrescriptionRenewalController {
     @Inject
     private lateinit var prescriptionRenewalDAO: PrescriptionRenewalDAO
 
+    @Inject
+    private lateinit var prescriptionDAO: PrescriptionDAO
+
+    @Inject
+    private lateinit var prescriptionRenewalPrescriptionDAO: PrescriptionRenewalPrescriptionDAO
+
     /**
-     * Creates new prescription renewal database entry
+     * Creates new prescription renewal database entry, creates the connection between prescription renewal and prescription description
      *
      * @param id reference number
      * @param prescriptions list of prescriptions
@@ -34,7 +41,7 @@ class PrescriptionRenewalController {
      */
     fun createPrescriptionRenewal(
         id: UUID,
-        prescriptions: List<String>,
+        prescriptions: List<Prescription>,
         practitionerUserId: UUID,
         paymentStatus: PaymentStatus,
         paymentUrl: String,
@@ -44,9 +51,8 @@ class PrescriptionRenewalController {
         transactionId: String?,
         userId: UUID
     ): PrescriptionRenewal {
-        return prescriptionRenewalDAO.create(
+        val createdRenewalRequest = prescriptionRenewalDAO.create(
             id = id,
-            prescriptions = prescriptions,
             paymentUrl = paymentUrl,
             transactionId = transactionId,
             practitionerUserId = practitionerUserId,
@@ -57,6 +63,12 @@ class PrescriptionRenewalController {
             creatorId = userId,
             lastModifierId = userId
         )
+
+        for (prescription in prescriptions) {
+            prescriptionRenewalPrescriptionDAO.create(UUID.randomUUID(), prescription, createdRenewalRequest)
+        }
+
+        return createdRenewalRequest
     }
 
     /**
@@ -94,11 +106,21 @@ class PrescriptionRenewalController {
     }
 
     /**
-     * Removes prescription renewal from the database
+     * Removes prescription renewal from the database, its link to the prescriptions and prescriptions if they are not
+     * attached to any other renewal requests
      *
      * @param prescriptionRenewal renewal request to delete
      */
     fun deletePrescriptionRenewal(prescriptionRenewal: PrescriptionRenewal) {
+        val prescriptionsRenewalsLinks = prescriptionRenewalPrescriptionDAO.listByPrescriptionRenwal(prescriptionRenewal)
+        for (prescriptionRenewalLink in prescriptionsRenewalsLinks) {
+            prescriptionRenewalPrescriptionDAO.delete(prescriptionRenewalLink)
+            val prescription = prescriptionRenewalLink.prescription
+            if (prescription != null && prescriptionRenewalPrescriptionDAO.listByPrescription(prescription).isEmpty()) {
+                prescriptionDAO.delete(prescription)
+            }
+        }
+
         return prescriptionRenewalDAO.delete(prescriptionRenewal)
     }
 }
