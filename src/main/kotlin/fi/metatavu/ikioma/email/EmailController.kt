@@ -1,5 +1,6 @@
 package fi.metatavu.ikioma.email
 
+import fi.metatavu.ikioma.persistence.dao.PrescriptionRenewalPrescriptionDAO
 import fi.metatavu.ikioma.persistence.models.PrescriptionRenewal
 import io.quarkus.mailer.Mail
 import io.quarkus.mailer.Mailer
@@ -21,7 +22,7 @@ class EmailController {
     private lateinit var reactiveMailer: ReactiveMailer
 
     @Inject
-    private lateinit var logger: org.slf4j.Logger
+    private lateinit var prescriptionRenewalPrescriptionDAO: PrescriptionRenewalPrescriptionDAO
 
     /**
      * Sends email using blocking mailer service
@@ -62,10 +63,11 @@ class EmailController {
         firstName: String,
         lastName: String
     ) {
+        val prescriptions = prescriptionRenewalPrescriptionDAO.listByPrescriptionRenwal(prescriptionRenewal).map { it.prescription?.prescriptionName }
         sendEmail(
             email,
             "SEC reseptinuusintapyyntö",
-            "Henkilö $firstName $lastName ($ssn) pyytää reseptin uusintaa resepteille ${prescriptionRenewal.prescriptions.joinToString(", ")}"
+            "Henkilö $firstName $lastName ($ssn) pyytää reseptin uusintaa resepteille ${prescriptions.joinToString(", ")}"
         )
     }
 }

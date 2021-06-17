@@ -10,7 +10,6 @@ import javax.persistence.*
  *
  * @property id id which is represented by reference number of initiated payment
  * @property paymentUrl payment url from the checkout payment service
- * @property prescriptions list of prescriptions requested
  * @property transactionId transaction id
  * @property practitionerUserId practitioner user id
  * @property stamp unique identifier of the payment
@@ -30,11 +29,6 @@ class PrescriptionRenewal {
 
     @Column
     var paymentUrl: String? = null
-
-    @ElementCollection
-    @CollectionTable(name = "prescriptions", joinColumns = [JoinColumn(name = "ID")])
-    @Column(name = "prescriptionname", nullable = false)
-    lateinit var prescriptions: Collection<String>
 
     @Column
     var transactionId: String? = null

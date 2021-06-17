@@ -93,7 +93,7 @@ class PrescriptionRenewalsTestsIT {
                 successRedirectUrl = "http://example.com/checkoutFinland/success",
                 cancelRedirectUrl = "http://example.com/checkoutFinland/cancel",
                 practitionerUserId = korhonenId,
-                prescriptions = arrayOf("Burana", "Even more Burana", "All the Burana")
+                prescriptions = arrayOf("Burana", "Burana", "Even more Burana", "All the Burana")
             )
             val createdPrescription = builder.teroAyramo().prescriptionRenewals.create(
                 prescriptionRenewal
@@ -108,7 +108,7 @@ class PrescriptionRenewalsTestsIT {
             Assertions.assertEquals(createdPrescription.transactionId, foundRenewalRequest.transactionId)
             Assertions.assertEquals(createdPrescription.practitionerUserId, foundRenewalRequest.practitionerUserId)
             Assertions.assertEquals(createdPrescription.status, foundRenewalRequest.status)
-            Assertions.assertEquals(3, foundRenewalRequest.prescriptions.size)
+            Assertions.assertEquals(4, foundRenewalRequest.prescriptions.size)
 
             val algorithm = "sha256"
             val provider = "spankki"
