@@ -3,12 +3,12 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
     <changeSet id="init" author="Katja Danilova">
-        <createTable tableName="prescriptions">
+        <createTable tableName="prescription">
             <column name="id" type="binary(16)">
                 <constraints nullable="false" primaryKey="true"/>
             </column>
-            <column name="prescriptionname" type="varchar(500)">
-                <constraints nullable="false" primaryKey="true"/>
+            <column name="prescriptionname" type="text">
+                <constraints nullable="false"/>
             </column>
         </createTable>
 
@@ -46,13 +46,7 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-    </changeSet>
-    
-    <changeSet id="collection_to_table" author="Katja Danilova">
-        <renameTable oldTableName="prescriptions" newTableName="prescription"/>
-        <dropPrimaryKey tableName="prescription" constraintName="prescriptionname" />
-        <modifyDataType tableName="prescription" columnName="prescriptionname" newDataType="text"/>
-        <addPrimaryKey tableName="prescription" columnNames="id"/>
+
         <createTable tableName="prescriptionrenewalprescription">
             <column name="id" type="binary(16)">
                 <constraints unique="true" nullable="false" primaryKey="true"/>
@@ -64,6 +58,6 @@
                 <constraints nullable="false" primaryKey="true" foreignKeyName="FK_PRESCRIPTIONRENEWALPRESCRIPTION_PRESCRIPTIONRENEWAL_ID" referencedColumnNames="id" referencedTableName="prescriptionrenewal"/>
             </column>
         </createTable>
-
     </changeSet>
+
 </databaseChangeLog>
