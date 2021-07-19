@@ -1,3 +1,3 @@
 [submodule "ikioma-email-api-spec"]
-	path = ikioma-email-api-spec
+	path = ikioma-payments-api-spec
 	url = https://github.com/Metatavu/ikioma-email-api-spec.git
