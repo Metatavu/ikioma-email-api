@@ -20,7 +20,7 @@ import java.util.*
 import javax.inject.Inject
 
 /**
- * Tests for prescription renewals
+ * Tests for prescription renewals API
  */
 @QuarkusTest
 @QuarkusTestResource.List(
