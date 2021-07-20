@@ -25,7 +25,7 @@ import java.util.*
     QuarkusTestResource(KeycloakTestResource::class),
     QuarkusTestResource(MysqlResource::class)
 )
-class BasePrescriptionRenewalsTestsIT {
+class PrescriptionRenewalsTestsIT {
 
     private val korhonenId = UUID.fromString("2d42e574-2670-4855-8169-da642e0ef067")
     private val korhonenEmail = "onni.korhonen@example.com"
