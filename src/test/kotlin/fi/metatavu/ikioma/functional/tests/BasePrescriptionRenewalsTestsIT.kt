@@ -181,7 +181,7 @@ abstract class BasePrescriptionRenewalsTestsIT {
     protected abstract fun prescriptionRenewalAssertMails(korhonenEmail: String)
 
     /**
-     * Tests prescription renewal request when the payment was calcelled
+     * Tests prescription renewal request when the payment was cancelled
      */
     @Test
     fun prescriptionRenewalPaymentCancel() {
