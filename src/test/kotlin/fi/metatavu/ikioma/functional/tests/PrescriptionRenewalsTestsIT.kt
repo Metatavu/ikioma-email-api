@@ -5,7 +5,6 @@ import fi.metatavu.ikioma.email.api.client.models.PrescriptionRenewal
 import fi.metatavu.ikioma.functional.resources.MysqlResource
 import fi.metatavu.ikioma.functional.resources.TestBuilder
 import fi.metatavu.ikioma.integrations.test.functional.resources.KeycloakTestResource
-import fi.metatavu.ikioma.integrations.test.functional.settings.ApiTestSettings
 import io.quarkus.mailer.MockMailbox
 import io.quarkus.test.common.QuarkusTestResource
 import io.quarkus.test.junit.QuarkusTest
@@ -21,7 +20,7 @@ import java.util.*
 import javax.inject.Inject
 
 /**
- * Tests Payments API
+ * Tests for prescription renewals
  */
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -44,7 +43,7 @@ class PrescriptionRenewalsTestsIT {
     @Test
     fun prescriptionRenewalWrongRole() {
         TestBuilder().use { builder ->
-            val createdPrescription = builder.teroAyramoNonRegistered().prescriptionRenewals.assertCreateFailStatus(
+            builder.teroAyramoNonRegistered().prescriptionRenewals.assertCreateFailStatus(
                 403,
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
