@@ -7,6 +7,7 @@ import fi.metatavu.ikioma.functional.resources.TestBuilder
 import fi.metatavu.ikioma.integrations.test.functional.resources.KeycloakTestResource
 import io.quarkus.mailer.MockMailbox
 import io.quarkus.test.common.QuarkusTestResource
+import io.quarkus.test.junit.DisabledOnNativeImage
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured
 import org.apache.commons.codec.digest.HmacAlgorithms
@@ -14,8 +15,10 @@ import org.apache.commons.codec.digest.HmacUtils
 import org.eclipse.microprofile.config.ConfigProvider
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
+import javax.inject.Inject
 
 /**
  * Tests for prescription renewals API
@@ -29,6 +32,14 @@ class PrescriptionRenewalsTestsIT {
 
     private val korhonenId = UUID.fromString("2d42e574-2670-4855-8169-da642e0ef067")
     private val korhonenEmail = "onni.korhonen@example.com"
+
+    @Inject
+    private lateinit var mailbox: MockMailbox
+
+    @BeforeEach
+    fun init() {
+        mailbox.clear()
+    }
 
     @Test
     fun prescriptionRenewalWrongRole() {
@@ -73,6 +84,7 @@ class PrescriptionRenewalsTestsIT {
      *  the email to practitioner was sent
      */
     @Test
+    @DisabledOnNativeImage
     fun prescriptionRenewal() {
         TestBuilder().use { builder ->
             //todo this test assumes Onni korhonen to be practitioner
@@ -170,17 +182,14 @@ class PrescriptionRenewalsTestsIT {
 
             builder.teroAyramo().prescriptionRenewals.assertFindFailStatus(404, createdPrescription.id)
 
-            val mailbox = getMailbox()
-            if (mailbox != null) {
-                val practitionerMessages = mailbox.getMessagesSentTo(korhonenEmail)
+            val practitionerMessages = mailbox.getMessagesSentTo(korhonenEmail)
 
-                Assertions.assertNotNull(practitionerMessages)
-                Assertions.assertEquals(1, practitionerMessages.size)
-                Assertions.assertEquals("SEC reseptinuusintapyyntö", practitionerMessages[0].subject)
-                Assertions.assertTrue(practitionerMessages[0].text.startsWith("Henkilö Tero Testi Äyrämö (010170-999R) pyytää reseptin uusintaa resepteille "))
-                Assertions.assertTrue(practitionerMessages[0].text.contains("Even more Burana"))
-                Assertions.assertTrue(practitionerMessages[0].text.contains("All the Burana"))
-            }
+            Assertions.assertNotNull(practitionerMessages)
+            Assertions.assertEquals(1, practitionerMessages.size)
+            Assertions.assertEquals("SEC reseptinuusintapyyntö", practitionerMessages[0].subject)
+            Assertions.assertTrue(practitionerMessages[0].text.startsWith("Henkilö Tero Testi Äyrämö (010170-999R) pyytää reseptin uusintaa resepteille "))
+            Assertions.assertTrue(practitionerMessages[0].text.contains("Even more Burana"))
+            Assertions.assertTrue(practitionerMessages[0].text.contains("All the Burana"))
         }
     }
 
@@ -287,13 +296,6 @@ class PrescriptionRenewalsTestsIT {
                 .get("${builder.settings.apiBasePath}/v1/checkoutFinland/cancel")
                 .then().assertThat().statusCode(204)
         }
-    }
-
-    /**
-     * Returns mock mailbox if available on test environment (available on JVM but on in native)
-     */
-    protected fun getMailbox(): MockMailbox? {
-        return null
     }
 
     /**
