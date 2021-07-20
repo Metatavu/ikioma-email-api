@@ -5,40 +5,27 @@ import fi.metatavu.ikioma.email.api.client.models.PrescriptionRenewal
 import fi.metatavu.ikioma.functional.resources.MysqlResource
 import fi.metatavu.ikioma.functional.resources.TestBuilder
 import fi.metatavu.ikioma.integrations.test.functional.resources.KeycloakTestResource
-import io.quarkus.mailer.MockMailbox
 import io.quarkus.test.common.QuarkusTestResource
-import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured
 import org.apache.commons.codec.digest.HmacAlgorithms
 import org.apache.commons.codec.digest.HmacUtils
 import org.eclipse.microprofile.config.ConfigProvider
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
-import javax.inject.Inject
 
 /**
  * Tests for prescription renewals API
  */
-@QuarkusTest
 @QuarkusTestResource.List(
     QuarkusTestResource(KeycloakTestResource::class),
     QuarkusTestResource(MysqlResource::class)
 )
-class PrescriptionRenewalsTestsIT {
+abstract class BasePrescriptionRenewalsTestsIT {
 
     private val korhonenId = UUID.fromString("2d42e574-2670-4855-8169-da642e0ef067")
     private val korhonenEmail = "onni.korhonen@example.com"
-
-    @Inject
-    private lateinit var mailbox: MockMailbox
-
-    @BeforeEach
-    fun init() {
-        mailbox.clear()
-    }
 
     @Test
     fun prescriptionRenewalWrongRole() {
@@ -179,16 +166,19 @@ class PrescriptionRenewalsTestsIT {
 
 
             builder.teroAyramo().prescriptionRenewals.assertFindFailStatus(404, createdPrescription.id)
-            val practitionerMessages = mailbox.getMessagesSentTo(korhonenEmail)
 
-            Assertions.assertNotNull(practitionerMessages)
-            Assertions.assertEquals(1, practitionerMessages.size)
-            Assertions.assertEquals("SEC reseptinuusintapyyntö", practitionerMessages[0].subject)
-            Assertions.assertTrue(practitionerMessages[0].text.startsWith("Henkilö Tero Testi Äyrämö (010170-999R) pyytää reseptin uusintaa resepteille "))
-            Assertions.assertTrue(practitionerMessages[0].text.contains("Even more Burana"))
-            Assertions.assertTrue(practitionerMessages[0].text.contains("All the Burana"))
+            prescriptionRenewalAssertMails(
+                korhonenEmail = korhonenEmail
+            )
         }
     }
+
+    /**
+     * Asserts mails for prescriptionRenewal test. Implementation differs for JVM and native builds
+     *
+     * @param korhonenEmail email for korhonen
+     */
+    protected abstract fun prescriptionRenewalAssertMails(korhonenEmail: String)
 
     /**
      * Tests prescription renewal request when the payment was calcelled
