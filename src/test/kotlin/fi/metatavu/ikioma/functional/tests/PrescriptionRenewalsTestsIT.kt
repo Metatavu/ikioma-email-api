@@ -5,9 +5,9 @@ import fi.metatavu.ikioma.email.api.client.models.PrescriptionRenewal
 import fi.metatavu.ikioma.functional.resources.MysqlResource
 import fi.metatavu.ikioma.functional.resources.TestBuilder
 import fi.metatavu.ikioma.integrations.test.functional.resources.KeycloakTestResource
-import fi.metatavu.ikioma.integrations.test.functional.settings.ApiTestSettings
 import io.quarkus.mailer.MockMailbox
 import io.quarkus.test.common.QuarkusTestResource
+import io.quarkus.test.junit.DisabledOnNativeImage
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured
 import org.apache.commons.codec.digest.HmacAlgorithms
@@ -21,7 +21,7 @@ import java.util.*
 import javax.inject.Inject
 
 /**
- * Tests Payments API
+ * Tests for prescription renewals API
  */
 @QuarkusTest
 @QuarkusTestResource.List(
@@ -44,7 +44,7 @@ class PrescriptionRenewalsTestsIT {
     @Test
     fun prescriptionRenewalWrongRole() {
         TestBuilder().use { builder ->
-            val createdPrescription = builder.teroAyramoNonRegistered().prescriptionRenewals.assertCreateFailStatus(
+            builder.teroAyramoNonRegistered().prescriptionRenewals.assertCreateFailStatus(
                 403,
                 PrescriptionRenewal(
                     status = PaymentStatus.nOTPAID,
@@ -84,6 +84,7 @@ class PrescriptionRenewalsTestsIT {
      *  the email to practitioner was sent
      */
     @Test
+    @DisabledOnNativeImage
     fun prescriptionRenewal() {
         TestBuilder().use { builder ->
             //todo this test assumes Onni korhonen to be practitioner
@@ -180,6 +181,7 @@ class PrescriptionRenewalsTestsIT {
 
 
             builder.teroAyramo().prescriptionRenewals.assertFindFailStatus(404, createdPrescription.id)
+
             val practitionerMessages = mailbox.getMessagesSentTo(korhonenEmail)
 
             Assertions.assertNotNull(practitionerMessages)
@@ -192,7 +194,7 @@ class PrescriptionRenewalsTestsIT {
     }
 
     /**
-     * Tests prescription renewal request when the payment was calcelled
+     * Tests prescription renewal request when the payment was cancelled
      */
     @Test
     fun prescriptionRenewalPaymentCancel() {
