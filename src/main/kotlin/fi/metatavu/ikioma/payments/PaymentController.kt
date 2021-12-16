@@ -128,6 +128,7 @@ class PaymentController {
         prescriptionRenewal.checkoutAccount = merchantId
         prescriptionRenewal.transactionId = sendPayment.transactionId.toString()
         prescriptionRenewal.paymentUrl = sendPayment.href
+        println(prescriptionRenewal)
         return prescriptionRenewal
     }
 
