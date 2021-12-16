@@ -113,6 +113,18 @@ class PaymentController {
             Pair(timestampHeader, timestamp)
         )
 
+        println(merchantId)
+        println(algorithm)
+        println(nonce)
+        println(timestamp)
+        println(Serializer.moshi.adapter(PaymentRequest::class.java).toJson(paymentRequest))
+        println(headers[accountHeader] as Int?)
+        println(headers[algorithmHeader] as String?)
+        println(headers[methodHeader] as String?)
+        println(headers[timestampHeader] as OffsetDateTime?)
+        println(headers[nonceHeader] as String?)
+        println(buildHMAC(headers, Serializer.moshi.adapter(PaymentRequest::class.java).toJson(paymentRequest)))
+
         val sendPayment = paymentsApi.createPayment(
             paymentRequest,
             headers[accountHeader] as Int?,
@@ -128,7 +140,6 @@ class PaymentController {
         prescriptionRenewal.checkoutAccount = merchantId
         prescriptionRenewal.transactionId = sendPayment.transactionId.toString()
         prescriptionRenewal.paymentUrl = sendPayment.href
-        println(prescriptionRenewal)
         return prescriptionRenewal
     }
 
