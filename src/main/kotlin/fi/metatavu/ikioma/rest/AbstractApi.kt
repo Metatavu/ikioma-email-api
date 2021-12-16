@@ -31,7 +31,7 @@ abstract class AbstractApi {
     private lateinit var securityContext: SecurityContext
 
     @Context
-    private val request: HttpRequest? = null
+    private lateinit var request: HttpRequest
 
     /**
      * Returns logged user id

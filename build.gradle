@@ -79,7 +79,7 @@ allOpen {
 
 task generateApiSpec(type: GenerateTask) {
     generatorName = "jaxrs-spec"
-    inputSpec = "$rootDir/ikioma-email-api-spec/swagger.yaml".toString()
+    inputSpec = "$rootDir/ikioma-payments-api-spec/swagger.yaml".toString()
     outputDir = "$buildDir/generated/api-spec".toString()
     apiPackage = "fi.metatavu.ikioma.email.api.api.spec"
     invokerPackage = "fi.metatavu.ikioma.email.api.spec.invoker"
@@ -99,7 +99,7 @@ task generateApiSpec(type: GenerateTask) {
 task generateApiClient(type: GenerateTask) {
     generatorName = "kotlin"
     library = "jvm-okhttp3"
-    inputSpec = "$rootDir/ikioma-email-api-spec/swagger.yaml".toString()
+    inputSpec = "$rootDir/ikioma-payments-api-spec/swagger.yaml".toString()
     outputDir = "$buildDir/generated/api-client".toString()
     importMappings = [
             URI: "java.net.URI"
